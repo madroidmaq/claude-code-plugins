@@ -159,12 +159,12 @@ async function parsePluginMetadata(pluginPath: string): Promise<Partial<Plugin> 
 
     const manifest: PluginManifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
 
-    // Count components
+    // Get components with names
     const components = {
-      commands: countFiles(path.join(pluginPath, "commands")),
-      skills: countFiles(path.join(pluginPath, "skills")),
-      agents: countFiles(path.join(pluginPath, "agents")),
-      hooks: fs.existsSync(path.join(pluginPath, "hooks", "hooks.json")) ? 1 : 0,
+      commands: getComponentFiles(path.join(pluginPath, "commands")),
+      skills: getComponentFiles(path.join(pluginPath, "skills")),
+      agents: getComponentFiles(path.join(pluginPath, "agents")),
+      hooks: getHooks(pluginPath),
       mcp: fs.existsSync(path.join(pluginPath, ".mcp.json")),
     };
 
@@ -189,14 +189,33 @@ async function parsePluginMetadata(pluginPath: string): Promise<Partial<Plugin> 
 }
 
 /**
- * Count files in a directory (commands, skills, agents)
+ * Get files in a directory (commands, skills, agents)
  */
-function countFiles(dir: string): number {
-  if (!fs.existsSync(dir)) return 0;
+function getComponentFiles(dir: string): { count: number; names: string[] } {
+  if (!fs.existsSync(dir)) return { count: 0, names: [] };
   try {
-    return fs.readdirSync(dir).filter((f) => f.endsWith(".md") || f.endsWith(".sh")).length;
+    const files = fs
+      .readdirSync(dir)
+      .filter((f) => f.endsWith(".md") || f.endsWith(".sh"))
+      .map((f) => f.replace(/\.(md|sh)$/, ""));
+    return { count: files.length, names: files };
   } catch {
-    return 0;
+    return { count: 0, names: [] };
+  }
+}
+
+/**
+ * Get hooks from hooks.json
+ */
+function getHooks(pluginPath: string): { count: number; names: string[] } {
+  const hooksPath = path.join(pluginPath, "hooks", "hooks.json");
+  if (!fs.existsSync(hooksPath)) return { count: 0, names: [] };
+  try {
+    const hooksData = JSON.parse(fs.readFileSync(hooksPath, "utf-8"));
+    const hookNames = Object.keys(hooksData);
+    return { count: hookNames.length, names: hookNames };
+  } catch {
+    return { count: 0, names: [] };
   }
 }
 

@@ -12,10 +12,22 @@ export interface Plugin {
   };
   marketplace: string;
   components: {
-    commands?: number;
-    skills?: number;
-    agents?: number;
-    hooks?: number;
+    commands?: {
+      count: number;
+      names: string[];
+    };
+    skills?: {
+      count: number;
+      names: string[];
+    };
+    agents?: {
+      count: number;
+      names: string[];
+    };
+    hooks?: {
+      count: number;
+      names: string[];
+    };
     mcp?: boolean;
   };
   installStatus?: {

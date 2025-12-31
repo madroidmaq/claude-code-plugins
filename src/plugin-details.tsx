@@ -12,6 +12,12 @@ interface PluginDetailsProps {
 }
 
 export default function PluginDetails({ plugin }: PluginDetailsProps) {
+  // Build component line
+  const buildComponentLine = (title: string, component?: { count: number; names: string[] }): string => {
+    if (!component || component.count === 0) return "";
+    return `- **${title}**: ${component.names.join("、")}\n`;
+  };
+
   const markdown = `
 # ${plugin.name}
 
@@ -25,19 +31,7 @@ ${plugin.description}
 
 ## Components
 
-${plugin.components.commands ? `- **Commands**: ${plugin.components.commands}` : ""}
-${plugin.components.skills ? `- **Skills**: ${plugin.components.skills}` : ""}
-${plugin.components.agents ? `- **Agents**: ${plugin.components.agents}` : ""}
-${plugin.components.hooks ? `- **Hooks**: ${plugin.components.hooks}` : ""}
-${plugin.components.mcp ? "- **MCP Servers**: Yes" : ""}
-
-## Installation Status
-
-${
-  plugin.installStatus?.installed
-    ? `✅ **Installed** (${plugin.installStatus.scope} scope, v${plugin.installStatus.version})`
-    : "❌ **Not installed**"
-}
+${buildComponentLine("Commands", plugin.components.commands)}${buildComponentLine("Skills", plugin.components.skills)}${buildComponentLine("Agents", plugin.components.agents)}${buildComponentLine("Hooks", plugin.components.hooks)}${plugin.components.mcp ? "- **MCP Servers**: Enabled\n" : ""}
   `;
 
   async function handleInstall(scope: "user" | "project" | "local") {
@@ -70,10 +64,10 @@ ${
           <Detail.Metadata.Label title="Version" text={plugin.version} />
           <Detail.Metadata.Label title="Marketplace" text={plugin.marketplace} />
           <Detail.Metadata.Separator />
-          <Detail.Metadata.Label title="Commands" text={plugin.components.commands?.toString() || "0"} />
-          <Detail.Metadata.Label title="Skills" text={plugin.components.skills?.toString() || "0"} />
-          <Detail.Metadata.Label title="Agents" text={plugin.components.agents?.toString() || "0"} />
-          <Detail.Metadata.Label title="Hooks" text={plugin.components.hooks?.toString() || "0"} />
+          <Detail.Metadata.Label title="Commands" text={plugin.components.commands?.count.toString() || "0"} />
+          <Detail.Metadata.Label title="Skills" text={plugin.components.skills?.count.toString() || "0"} />
+          <Detail.Metadata.Label title="Agents" text={plugin.components.agents?.count.toString() || "0"} />
+          <Detail.Metadata.Label title="Hooks" text={plugin.components.hooks?.count.toString() || "0"} />
           <Detail.Metadata.Label title="MCP" text={plugin.components.mcp ? "Yes" : "No"} />
           <Detail.Metadata.Separator />
           {plugin.installStatus?.installed && (
