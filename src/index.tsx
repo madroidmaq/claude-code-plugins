@@ -158,7 +158,7 @@ export default function BrowsePlugins() {
       searchBarAccessory={
         <List.Dropdown tooltip="Filter by Marketplace" value={marketplaceFilter} onChange={setMarketplaceFilter}>
           {marketplaces.map((m) => (
-            <List.Dropdown.Item key={m} title={m} value={m} />
+            <List.Dropdown.Item key={m} title={m === "all" ? "All Marketplaces" : m} value={m} />
           ))}
         </List.Dropdown>
       }
@@ -174,40 +174,100 @@ export default function BrowsePlugins() {
         const accessories: List.Item.Accessory[] = [];
 
         if (plugin.installStatus?.installed) {
-          accessories.push({ tag: { value: "Installed", color: Color.Green } });
+          // Show enabled/disabled status only
+          if (plugin.installStatus.enabled !== false) {
+            accessories.push({ tag: { value: "Enabled", color: Color.Green } });
+          } else {
+            accessories.push({ tag: { value: "Disabled", color: Color.Red } });
+          }
         }
-
-        // Build component line
-        const buildComponentLine = (
-          title: string,
-          component?: { count: number; names: string[] },
-        ): string => {
-          if (!component || component.count === 0) return "";
-          return `- **${title}**: ${component.names.join("、")}\n`;
-        };
-
-        const markdown = `
-# ${plugin.name}
-
-${plugin.description}
-
-## Details
-
-- **Version**: ${plugin.version}
-- **Marketplace**: ${plugin.marketplace}
-- **Author**: ${plugin.author?.name || "Unknown"} ${plugin.author?.email ? `(${plugin.author.email})` : ""}
-
-## Components
-
-${buildComponentLine("Commands", plugin.components.commands)}${buildComponentLine("Skills", plugin.components.skills)}${buildComponentLine("Agents", plugin.components.agents)}${buildComponentLine("Hooks", plugin.components.hooks)}${plugin.components.mcp ? "- **MCP Servers**: Enabled\n" : ""}
-        `;
 
         return (
           <List.Item
             key={`${plugin.name}@${plugin.marketplace}`}
             title={plugin.name}
             accessories={accessories}
-            detail={<List.Item.Detail markdown={markdown} />}
+            detail={
+              <List.Item.Detail
+                markdown={plugin.description}
+                metadata={
+                  <List.Item.Detail.Metadata>
+                    {/* Basic Info */}
+                    <List.Item.Detail.Metadata.Label title="Version" text={plugin.version} />
+                    <List.Item.Detail.Metadata.Label title="Marketplace" text={plugin.marketplace} />
+                    <List.Item.Detail.Metadata.Label
+                      title="Author"
+                      text={`${plugin.author?.name || "Unknown"}${plugin.author?.email ? ` (${plugin.author.email})` : ""}`}
+                    />
+
+                    {/* Components */}
+                    <List.Item.Detail.Metadata.Separator />
+                    <List.Item.Detail.Metadata.Label title="Components" />
+                    {plugin.components.commands && plugin.components.commands.count > 0 && (
+                      <List.Item.Detail.Metadata.TagList title="Commands">
+                        {plugin.components.commands.names.map((name) => (
+                          <List.Item.Detail.Metadata.TagList.Item key={name} text={name} color={Color.Purple} />
+                        ))}
+                      </List.Item.Detail.Metadata.TagList>
+                    )}
+                    {plugin.components.skills && plugin.components.skills.count > 0 && (
+                      <List.Item.Detail.Metadata.TagList title="Skills">
+                        {plugin.components.skills.names.map((name) => (
+                          <List.Item.Detail.Metadata.TagList.Item key={name} text={name} color={Color.Blue} />
+                        ))}
+                      </List.Item.Detail.Metadata.TagList>
+                    )}
+                    {plugin.components.agents && plugin.components.agents.count > 0 && (
+                      <List.Item.Detail.Metadata.TagList title="Agents">
+                        {plugin.components.agents.names.map((name) => (
+                          <List.Item.Detail.Metadata.TagList.Item key={name} text={name} color={Color.Orange} />
+                        ))}
+                      </List.Item.Detail.Metadata.TagList>
+                    )}
+                    {plugin.components.hooks && plugin.components.hooks.count > 0 && (
+                      <List.Item.Detail.Metadata.TagList title="Hooks">
+                        {plugin.components.hooks.names.map((name) => (
+                          <List.Item.Detail.Metadata.TagList.Item key={name} text={name} color={Color.Magenta} />
+                        ))}
+                      </List.Item.Detail.Metadata.TagList>
+                    )}
+                    {plugin.components.mcp && (
+                      <List.Item.Detail.Metadata.Label title="MCP Servers" text="Enabled" />
+                    )}
+
+                    {/* Installation Info */}
+                    {plugin.installStatus?.installed && (
+                      <>
+                        <List.Item.Detail.Metadata.Separator />
+                        <List.Item.Detail.Metadata.Label title="Installation" />
+                        <List.Item.Detail.Metadata.TagList title="Status">
+                          <List.Item.Detail.Metadata.TagList.Item
+                            text={plugin.installStatus.enabled !== false ? "Enabled" : "Disabled"}
+                            color={plugin.installStatus.enabled !== false ? Color.Green : Color.Red}
+                          />
+                        </List.Item.Detail.Metadata.TagList>
+                        <List.Item.Detail.Metadata.Label title="Scope" text={plugin.installStatus.scope || "unknown"} />
+                        <List.Item.Detail.Metadata.Label
+                          title="Install Path"
+                          text={plugin.installStatus.installPath || "unknown"}
+                        />
+                        {plugin.installStatus.version && (
+                          <List.Item.Detail.Metadata.Label title="Installed Version" text={plugin.installStatus.version} />
+                        )}
+                      </>
+                    )}
+
+                    {/* Repository Link */}
+                    {plugin.repositoryUrl && (
+                      <>
+                        <List.Item.Detail.Metadata.Separator />
+                        <List.Item.Detail.Metadata.Link title="Repository" target={plugin.repositoryUrl} text="View on GitHub" />
+                      </>
+                    )}
+                  </List.Item.Detail.Metadata>
+                }
+              />
+            }
             actions={
               <ActionPanel>
                 {!plugin.installStatus?.installed ? (
@@ -278,13 +338,19 @@ ${buildComponentLine("Commands", plugin.components.commands)}${buildComponentLin
                 )}
                 <ActionPanel.Section title="Copy">
                   <Action.CopyToClipboard
-                    title="Copy Install Command"
-                    content={`claude plugin install ${plugin.name}@${plugin.marketplace}`}
-                  />
-                  <Action.CopyToClipboard
                     title="Copy Plugin ID"
                     content={`${plugin.name}@${plugin.marketplace}`}
                     shortcut={{ modifiers: ["cmd"], key: "c" }}
+                  />
+                  {plugin.installStatus?.installed && plugin.installStatus.installPath && (
+                    <Action.CopyToClipboard
+                      title="Copy Install Path"
+                      content={plugin.installStatus.installPath}
+                    />
+                  )}
+                  <Action.CopyToClipboard
+                    title="Copy Install Command"
+                    content={`claude plugin install ${plugin.name}@${plugin.marketplace}`}
                   />
                 </ActionPanel.Section>
               </ActionPanel>
