@@ -74,7 +74,6 @@ Cache invalidation happens automatically on write operations (install, uninstall
 ```
 src/
 ├── index.tsx                  # Browse Plugins - main search/browse interface
-├── installed-plugins.tsx      # Manage Installed - update/remove plugins
 ├── marketplaces.tsx           # Manage Marketplaces - add/remove sources
 ├── plugin-details.tsx         # Detail view with install actions
 ├── add-marketplace.tsx        # Form for adding marketplace sources
@@ -85,8 +84,7 @@ src/
 │   └── cache-manager.ts      # Caching with TTL
 ├── hooks/
 │   ├── usePlugins.ts         # Fetches all available plugins
-│   ├── useMarketplaces.ts    # Fetches marketplace list
-│   └── useInstalledPlugins.ts # Fetches installed plugins
+│   └── useMarketplaces.ts    # Fetches marketplace list
 └── components/
     └── ErrorView.tsx         # Standardized error display
 ```

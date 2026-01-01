@@ -306,9 +306,7 @@ export async function getAllAvailablePlugins(): Promise<Plugin[]> {
       // Process each plugin from the manifest
       for (const entry of manifest.plugins) {
         const pluginId = `${entry.name}@${marketplace.name}`;
-        const installed = installedPlugins.find(
-          (p) => p.pluginId === pluginId,
-        );
+        const installed = installedPlugins.find((p) => p.pluginId === pluginId);
 
         // Try to resolve local plugin path for additional metadata
         const pluginPath = resolvePluginPath(
@@ -326,8 +324,7 @@ export async function getAllAvailablePlugins(): Promise<Plugin[]> {
         const plugin: Plugin = {
           name: entry.name,
           version: entry.version || detailedMetadata?.version || "unknown",
-          description:
-            entry.description || detailedMetadata?.description || "",
+          description: entry.description || detailedMetadata?.description || "",
           author: entry.author || detailedMetadata?.author,
           marketplace: marketplace.name,
           marketplacePath: pluginPath || undefined,

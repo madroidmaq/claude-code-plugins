@@ -15,8 +15,6 @@ declare type Preferences = ExtensionPreferences
 declare namespace Preferences {
   /** Preferences accessible in the `index` command */
   export type Index = ExtensionPreferences & {}
-  /** Preferences accessible in the `installed-plugins` command */
-  export type InstalledPlugins = ExtensionPreferences & {}
   /** Preferences accessible in the `marketplaces` command */
   export type Marketplaces = ExtensionPreferences & {}
   /** Preferences accessible in the `validate-plugin` command */
@@ -26,8 +24,6 @@ declare namespace Preferences {
 declare namespace Arguments {
   /** Arguments passed to the `index` command */
   export type Index = {}
-  /** Arguments passed to the `installed-plugins` command */
-  export type InstalledPlugins = {}
   /** Arguments passed to the `marketplaces` command */
   export type Marketplaces = {}
   /** Arguments passed to the `validate-plugin` command */

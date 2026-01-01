@@ -10,14 +10,6 @@ A Raycast Extension for browsing, installing, and managing Claude Code plugins.
 - View plugin details including components (commands, skills, agents, hooks, MCP servers)
 - Quick installation with scope selection (user/project/local)
 
-### ⚙️ Manage Installed Plugins
-- List all installed plugins with status indicators
-- Enable/disable plugins
-- Update plugins to latest versions
-- Uninstall plugins
-- Open plugin directories in Finder or VS Code
-- View installation scope and version information
-
 ### 🏪 Manage Marketplaces
 - View all configured plugin marketplaces
 - Add new marketplaces (GitHub repos, local directories, Git URLs, remote URLs)
@@ -72,13 +64,6 @@ A Raycast Extension for browsing, installing, and managing Claude Code plugins.
 5. Choose installation scope (user/project/local)
 6. Install the plugin
 
-### Manage Installed Plugins
-
-1. Open Raycast
-2. Type "Manage Installed Plugins"
-3. View all installed plugins
-4. Use actions to update, enable/disable, or uninstall
-
 ### Manage Marketplaces
 
 1. Open Raycast
@@ -100,12 +85,11 @@ Supported marketplace types:
 
 ## Commands
 
-This extension provides 4 commands:
+This extension provides 3 commands:
 
 1. **Browse Claude Plugins** - Main plugin browsing interface
-2. **Manage Installed Plugins** - Manage your installed plugins
-3. **Manage Plugin Marketplaces** - Configure marketplace sources
-4. **Validate Plugin** - Developer tool for plugin validation
+2. **Manage Plugin Marketplaces** - Configure marketplace sources
+3. **Validate Plugin** - Developer tool for plugin validation
 
 ## Architecture
 
@@ -125,7 +109,6 @@ This extension provides 4 commands:
 ```
 src/
 ├── index.tsx                  # Browse Plugins command
-├── installed-plugins.tsx      # Manage Installed command
 ├── marketplaces.tsx           # Manage Marketplaces command
 ├── plugin-details.tsx         # Plugin detail view
 ├── add-marketplace.tsx        # Add marketplace form
@@ -136,8 +119,7 @@ src/
 │   └── cache-manager.ts      # Caching layer
 ├── hooks/
 │   ├── usePlugins.ts         # Plugin data hook
-│   ├── useMarketplaces.ts    # Marketplace data hook
-│   └── useInstalledPlugins.ts # Installed plugins hook
+│   └── useMarketplaces.ts    # Marketplace data hook
 └── components/
     └── ErrorView.tsx         # Error display component
 ```
@@ -169,13 +151,10 @@ The extension will appear in Raycast during development mode. Test all commands:
 
 - [ ] Browse and search plugins
 - [ ] Install plugin with different scopes
-- [ ] Update/uninstall plugins
-- [ ] Enable/disable plugins
 - [ ] Add marketplace (GitHub, directory, Git, URL)
 - [ ] Update/remove marketplace
 - [ ] View plugin details
 - [ ] Validate plugin
-- [ ] Open plugin in Finder/VS Code
 
 ## Troubleshooting
 

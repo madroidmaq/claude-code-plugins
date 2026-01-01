@@ -18,12 +18,6 @@
       "mode": "view"
     },
     {
-      "name": "installed-plugins",
-      "title": "Manage Installed Plugins",
-      "description": "Enable, disable, update, or uninstall installed Claude Code plugins",
-      "mode": "view"
-    },
-    {
       "name": "marketplaces",
       "title": "Manage Plugin Marketplaces",
       "description": "Add, remove, and update Claude Code plugin marketplaces",
