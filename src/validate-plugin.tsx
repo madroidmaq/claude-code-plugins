@@ -2,17 +2,31 @@
  * Validate Plugin command (dev tool)
  */
 
-import { List, ActionPanel, Action, Detail, showToast, Toast, Icon } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Detail,
+  showToast,
+  Toast,
+  Icon,
+} from "@raycast/api";
 import { useState } from "react";
 import { validatePlugin } from "./lib/claude-cli";
 import { homedir } from "os";
 import path from "path";
 
 export default function ValidatePlugin() {
-  const [validationResult, setValidationResult] = useState<{ success: boolean; output: string } | null>(null);
+  const [validationResult, setValidationResult] = useState<{
+    success: boolean;
+    output: string;
+  } | null>(null);
 
   async function handleValidate(pluginPath: string) {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Validating plugin..." });
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Validating plugin...",
+    });
     try {
       const result = await validatePlugin(pluginPath);
 
@@ -23,7 +37,10 @@ export default function ValidatePlugin() {
       } else {
         toast.style = Toast.Style.Failure;
         toast.title = "Validation failed";
-        setValidationResult({ success: false, output: result.error || "Unknown error" });
+        setValidationResult({
+          success: false,
+          output: result.error || "Unknown error",
+        });
       }
     } catch (error: any) {
       toast.style = Toast.Style.Failure;
@@ -50,8 +67,15 @@ ${validationResult.output}
         markdown={markdown}
         actions={
           <ActionPanel>
-            <Action title="Validate Another" icon={Icon.ArrowLeft} onAction={() => setValidationResult(null)} />
-            <Action.CopyToClipboard title="Copy Output" content={validationResult.output} />
+            <Action
+              title="Validate Another"
+              icon={Icon.ArrowLeft}
+              onAction={() => setValidationResult(null)}
+            />
+            <Action.CopyToClipboard
+              title="Copy Output"
+              content={validationResult.output}
+            />
           </ActionPanel>
         }
       />
@@ -85,7 +109,11 @@ ${validationResult.output}
             icon={Icon.Folder}
             actions={
               <ActionPanel>
-                <Action title="Validate" icon={Icon.CheckCircle} onAction={() => handleValidate(item.path)} />
+                <Action
+                  title="Validate"
+                  icon={Icon.CheckCircle}
+                  onAction={() => handleValidate(item.path)}
+                />
                 <Action.CopyToClipboard title="Copy Path" content={item.path} />
               </ActionPanel>
             }
@@ -113,7 +141,11 @@ ${validationResult.output}
   );
 }
 
-function CustomPathForm({ onValidate }: { onValidate: (path: string) => void }) {
+function CustomPathForm({
+  onValidate,
+}: {
+  onValidate: (path: string) => void;
+}) {
   const [pluginPath, setPluginPath] = useState("");
 
   return (

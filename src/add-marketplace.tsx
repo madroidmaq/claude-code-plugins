@@ -2,7 +2,14 @@
  * Add Marketplace form
  */
 
-import { Form, ActionPanel, Action, showToast, Toast, popToRoot } from "@raycast/api";
+import {
+  Form,
+  ActionPanel,
+  Action,
+  showToast,
+  Toast,
+  popToRoot,
+} from "@raycast/api";
 import { useState } from "react";
 import { addMarketplace } from "./lib/claude-cli";
 import { invalidateCache, CACHE_KEYS } from "./lib/cache-manager";
@@ -34,7 +41,10 @@ export default function AddMarketplace({ onAdded }: AddMarketplaceProps) {
       return;
     }
 
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Adding marketplace..." });
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Adding marketplace...",
+    });
 
     try {
       const result = await addMarketplace(source);
@@ -66,7 +76,12 @@ export default function AddMarketplace({ onAdded }: AddMarketplaceProps) {
         </ActionPanel>
       }
     >
-      <Form.Dropdown id="sourceType" title="Source Type" value={sourceType} onChange={setSourceType}>
+      <Form.Dropdown
+        id="sourceType"
+        title="Source Type"
+        value={sourceType}
+        onChange={setSourceType}
+      >
         <Form.Dropdown.Item value="github" title="GitHub Repository" />
         <Form.Dropdown.Item value="directory" title="Local Directory" />
         <Form.Dropdown.Item value="git" title="Git URL" />

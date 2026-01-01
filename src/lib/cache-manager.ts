@@ -23,7 +23,11 @@ interface CacheData<T> {
 /**
  * Get cached data with automatic TTL expiration
  */
-export async function getCachedData<T>(key: string, fetcher: () => Promise<T>, ttl: number = CACHE_TTL): Promise<T> {
+export async function getCachedData<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  ttl: number = CACHE_TTL,
+): Promise<T> {
   const cached = cache.get(key);
 
   if (cached) {
@@ -44,7 +48,7 @@ export async function getCachedData<T>(key: string, fetcher: () => Promise<T>, t
     JSON.stringify({
       value,
       timestamp: Date.now(),
-    })
+    }),
   );
 
   return value;

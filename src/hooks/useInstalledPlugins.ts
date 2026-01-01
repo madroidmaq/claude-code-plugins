@@ -4,7 +4,11 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { getInstalledPlugins } from "../lib/claude-cli";
-import { getCachedData, CACHE_KEYS, invalidateCache } from "../lib/cache-manager";
+import {
+  getCachedData,
+  CACHE_KEYS,
+  invalidateCache,
+} from "../lib/cache-manager";
 import { InstalledPlugin } from "../lib/types";
 
 export function useInstalledPlugins() {
@@ -16,7 +20,10 @@ export function useInstalledPlugins() {
     try {
       setIsLoading(true);
       setError(null);
-      const data = await getCachedData(CACHE_KEYS.INSTALLED_PLUGINS, getInstalledPlugins);
+      const data = await getCachedData(
+        CACHE_KEYS.INSTALLED_PLUGINS,
+        getInstalledPlugins,
+      );
       setPlugins(data);
     } catch (err) {
       setError(err as Error);

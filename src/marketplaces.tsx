@@ -2,9 +2,24 @@
  * Manage Plugin Marketplaces command
  */
 
-import { List, ActionPanel, Action, Icon, confirmAlert, showToast, Toast, Alert, Color } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  confirmAlert,
+  showToast,
+  Toast,
+  Alert,
+  Color,
+} from "@raycast/api";
 import { useMarketplaces } from "./hooks/useMarketplaces";
-import { removeMarketplace, updateMarketplace, openInFinder, openInVSCode } from "./lib/claude-cli";
+import {
+  removeMarketplace,
+  updateMarketplace,
+  openInFinder,
+  openInVSCode,
+} from "./lib/claude-cli";
 import { invalidateCache, CACHE_KEYS } from "./lib/cache-manager";
 import AddMarketplace from "./add-marketplace";
 import { ErrorView } from "./components/ErrorView";
@@ -17,7 +32,10 @@ export default function Marketplaces() {
   }
 
   async function handleUpdate(name: string) {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Updating marketplace..." });
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Updating marketplace...",
+    });
     try {
       const result = await updateMarketplace(name);
       if (result.success) {
@@ -39,7 +57,10 @@ export default function Marketplaces() {
   }
 
   async function handleUpdateAll() {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Updating all marketplaces..." });
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Updating all marketplaces...",
+    });
     try {
       const result = await updateMarketplace();
       if (result.success) {
@@ -71,7 +92,10 @@ export default function Marketplaces() {
         },
       })
     ) {
-      const toast = await showToast({ style: Toast.Style.Animated, title: "Removing marketplace..." });
+      const toast = await showToast({
+        style: Toast.Style.Animated,
+        title: "Removing marketplace...",
+      });
       try {
         const result = await removeMarketplace(name);
         if (result.success) {
@@ -112,7 +136,11 @@ export default function Marketplaces() {
       searchBarPlaceholder="Search marketplaces..."
       actions={
         <ActionPanel>
-          <Action.Push title="Add Marketplace" icon={Icon.Plus} target={<AddMarketplace onAdded={refetch} />} />
+          <Action.Push
+            title="Add Marketplace"
+            icon={Icon.Plus}
+            target={<AddMarketplace onAdded={refetch} />}
+          />
         </ActionPanel>
       }
     >
@@ -124,7 +152,11 @@ export default function Marketplaces() {
             accessories={[{ tag: { value: "Action", color: Color.Blue } }]}
             actions={
               <ActionPanel>
-                <Action.Push title="Add Marketplace" icon={Icon.Plus} target={<AddMarketplace onAdded={refetch} />} />
+                <Action.Push
+                  title="Add Marketplace"
+                  icon={Icon.Plus}
+                  target={<AddMarketplace onAdded={refetch} />}
+                />
                 <Action
                   title="Update All Marketplaces"
                   icon={Icon.ArrowClockwise}
@@ -144,7 +176,11 @@ export default function Marketplaces() {
               key={marketplace.name}
               title={marketplace.name}
               subtitle={getSourceDescription(marketplace)}
-              accessories={[{ text: new Date(marketplace.lastUpdated).toLocaleDateString() }]}
+              accessories={[
+                {
+                  text: new Date(marketplace.lastUpdated).toLocaleDateString(),
+                },
+              ]}
               actions={
                 <ActionPanel>
                   <ActionPanel.Section title="Management">
@@ -159,7 +195,6 @@ export default function Marketplaces() {
                       icon={Icon.Trash}
                       style={Action.Style.Destructive}
                       onAction={() => handleRemove(marketplace.name)}
-                      shortcut={{ modifiers: ["cmd"], key: "delete" }}
                     />
                   </ActionPanel.Section>
                   <ActionPanel.Section title="Development">
@@ -193,7 +228,10 @@ export default function Marketplaces() {
                       content={marketplace.name}
                       shortcut={{ modifiers: ["cmd"], key: "c" }}
                     />
-                    <Action.CopyToClipboard title="Copy Install Location" content={marketplace.installLocation} />
+                    <Action.CopyToClipboard
+                      title="Copy Install Location"
+                      content={marketplace.installLocation}
+                    />
                   </ActionPanel.Section>
                 </ActionPanel>
               }

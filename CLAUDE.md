@@ -44,7 +44,8 @@ When running `npm run dev`, the extension loads into Raycast with hot reload. Te
 1. **READ operations**: Direct JSON file parsing from `~/.claude/plugins/` for performance
    - `installed_plugins.json` - All installed plugins and their metadata
    - `known_marketplaces.json` - Configured plugin marketplaces
-   - Individual plugin manifests at `<marketplace>/plugins/<name>/.claude-plugin/plugin.json`
+   - **`<marketplace>/.claude-plugin/marketplace.json` - Single source of truth for available plugins** ⭐
+   - Optional: Individual plugin manifests at `<marketplace>/(plugins|external_plugins)/<name>/.claude-plugin/plugin.json` for detailed metadata (components, hooks)
 
 2. **WRITE operations**: Always use CLI commands (via `claude-cli.ts`) for safety
    - Install, uninstall, enable, disable plugins
@@ -52,6 +53,12 @@ When running `npm run dev`, the extension loads into Raycast with hot reload. Te
    - This ensures proper validation and file locking
 
 **Why this pattern?** Direct JSON parsing is 10x faster than spawning CLI processes for reads, but CLI commands ensure data integrity for writes.
+
+**Plugin Discovery**: The extension reads `marketplace.json` as the authoritative source for all available plugins. This file defines:
+- All plugins in the marketplace (including LSP servers, MCP integrations, external plugins)
+- Plugin metadata (name, description, author, version, category)
+- Plugin source location (local path or external URL)
+- No directory scanning - if a plugin isn't in `marketplace.json`, it won't be shown
 
 ### Caching Layer
 

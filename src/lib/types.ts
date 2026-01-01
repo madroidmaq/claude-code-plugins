@@ -139,3 +139,37 @@ export interface MarketplacesData {
     lastUpdated: string;
   };
 }
+
+// Marketplace manifest types (from <marketplace>/.claude-plugin/marketplace.json)
+export interface MarketplaceManifest {
+  $schema?: string;
+  name: string;
+  description: string;
+  owner?: {
+    name: string;
+    email?: string;
+  };
+  plugins: MarketplacePluginEntry[];
+}
+
+export interface MarketplacePluginEntry {
+  name: string;
+  description: string;
+  version?: string;
+  author?: {
+    name: string;
+    email?: string;
+  };
+  source: string | PluginSource;
+  category?: string;
+  homepage?: string;
+  tags?: string[];
+  strict?: boolean;
+  lspServers?: Record<string, unknown>;
+}
+
+export interface PluginSource {
+  source: "url" | "github" | "git";
+  url?: string;
+  repo?: string;
+}

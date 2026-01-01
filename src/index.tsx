@@ -2,10 +2,28 @@
  * Browse Claude Plugins - Main command
  */
 
-import { List, ActionPanel, Action, Icon, Color, showToast, Toast, confirmAlert, Alert } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  Color,
+  showToast,
+  Toast,
+  confirmAlert,
+  Alert,
+} from "@raycast/api";
 import { useState } from "react";
 import { usePlugins } from "./hooks/usePlugins";
-import { installPlugin, updatePlugin, uninstallPlugin, enablePlugin, disablePlugin, openInFinder, openInVSCode } from "./lib/claude-cli";
+import {
+  installPlugin,
+  updatePlugin,
+  uninstallPlugin,
+  enablePlugin,
+  disablePlugin,
+  openInFinder,
+  openInVSCode,
+} from "./lib/claude-cli";
 import { invalidateCache, CACHE_KEYS } from "./lib/cache-manager";
 import { ErrorView } from "./components/ErrorView";
 
@@ -22,7 +40,8 @@ export default function BrowsePlugins() {
     const matchesSearch =
       p.name.toLowerCase().includes(searchText.toLowerCase()) ||
       p.description.toLowerCase().includes(searchText.toLowerCase());
-    const matchesMarketplace = marketplaceFilter === "all" || p.marketplace === marketplaceFilter;
+    const matchesMarketplace =
+      marketplaceFilter === "all" || p.marketplace === marketplaceFilter;
     return matchesSearch && matchesMarketplace;
   });
 
@@ -30,11 +49,18 @@ export default function BrowsePlugins() {
 
   // Helper function to escape badge text for shields.io
   const escapeBadgeText = (text: string): string => {
-    return text.replace(/-/g, '--').replace(/_/g, '__').replace(/ /g, '%20');
+    return text.replace(/-/g, "--").replace(/_/g, "__").replace(/ /g, "%20");
   };
 
-  async function handleInstall(pluginName: string, marketplace: string, scope: "user" | "project" | "local") {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Installing plugin..." });
+  async function handleInstall(
+    pluginName: string,
+    marketplace: string,
+    scope: "user" | "project" | "local",
+  ) {
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Installing plugin...",
+    });
     try {
       const result = await installPlugin(`${pluginName}@${marketplace}`, scope);
       if (result.success) {
@@ -55,8 +81,14 @@ export default function BrowsePlugins() {
     }
   }
 
-  async function handleUpdate(pluginId: string, scope: "user" | "project" | "local") {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Updating plugin..." });
+  async function handleUpdate(
+    pluginId: string,
+    scope: "user" | "project" | "local",
+  ) {
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Updating plugin...",
+    });
     try {
       const result = await updatePlugin(pluginId, scope);
       if (result.success) {
@@ -77,7 +109,10 @@ export default function BrowsePlugins() {
     }
   }
 
-  async function handleUninstall(pluginId: string, scope: "user" | "project" | "local") {
+  async function handleUninstall(
+    pluginId: string,
+    scope: "user" | "project" | "local",
+  ) {
     if (
       await confirmAlert({
         title: "Uninstall Plugin",
@@ -88,7 +123,10 @@ export default function BrowsePlugins() {
         },
       })
     ) {
-      const toast = await showToast({ style: Toast.Style.Animated, title: "Uninstalling plugin..." });
+      const toast = await showToast({
+        style: Toast.Style.Animated,
+        title: "Uninstalling plugin...",
+      });
       try {
         const result = await uninstallPlugin(pluginId, scope);
         if (result.success) {
@@ -110,8 +148,14 @@ export default function BrowsePlugins() {
     }
   }
 
-  async function handleEnable(pluginId: string, scope: "user" | "project" | "local") {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Enabling plugin..." });
+  async function handleEnable(
+    pluginId: string,
+    scope: "user" | "project" | "local",
+  ) {
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Enabling plugin...",
+    });
     try {
       const result = await enablePlugin(pluginId, scope);
       if (result.success) {
@@ -132,8 +176,14 @@ export default function BrowsePlugins() {
     }
   }
 
-  async function handleDisable(pluginId: string, scope: "user" | "project" | "local") {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Disabling plugin..." });
+  async function handleDisable(
+    pluginId: string,
+    scope: "user" | "project" | "local",
+  ) {
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Disabling plugin...",
+    });
     try {
       const result = await disablePlugin(pluginId, scope);
       if (result.success) {
@@ -161,9 +211,17 @@ export default function BrowsePlugins() {
       onSearchTextChange={setSearchText}
       searchBarPlaceholder="Search plugins..."
       searchBarAccessory={
-        <List.Dropdown tooltip="Filter by Marketplace" value={marketplaceFilter} onChange={setMarketplaceFilter}>
+        <List.Dropdown
+          tooltip="Filter by Marketplace"
+          value={marketplaceFilter}
+          onChange={setMarketplaceFilter}
+        >
           {marketplaces.map((m) => (
-            <List.Dropdown.Item key={m} title={m === "all" ? "All Marketplaces" : m} value={m} />
+            <List.Dropdown.Item
+              key={m}
+              title={m === "all" ? "All Marketplaces" : m}
+              value={m}
+            />
           ))}
         </List.Dropdown>
       }
@@ -193,89 +251,116 @@ export default function BrowsePlugins() {
 
           // Version badge - only show if version exists
           if (plugin.version) {
-            badges.push(`![version](https://img.shields.io/badge/v${escapeBadgeText(plugin.version)}-gray?style=flat-square)`);
+            badges.push(
+              `![version](https://img.shields.io/badge/v${escapeBadgeText(plugin.version)}-gray?style=flat-square)`,
+            );
           }
 
           // Marketplace badge - using claude icon
-          badges.push(`![marketplace](https://img.shields.io/badge/${escapeBadgeText(plugin.marketplace)}-blue?style=flat-square&logo=claude&logoColor=white)`);
+          badges.push(
+            `![marketplace](https://img.shields.io/badge/${escapeBadgeText(plugin.marketplace)}-blue?style=flat-square&logo=claude&logoColor=white)`,
+          );
 
           // Author badge with gmail icon
           if (plugin.author?.name) {
-            badges.push(`![author](https://img.shields.io/badge/${escapeBadgeText(plugin.author.name)}-orange?style=flat-square&logo=gmail&logoColor=white)`);
+            badges.push(
+              `![author](https://img.shields.io/badge/${escapeBadgeText(plugin.author.name)}-orange?style=flat-square&logo=gmail&logoColor=white)`,
+            );
           }
 
-          return badges.join(' ');
+          return badges.join(" ");
         };
 
         const buildComponentBadges = () => {
           const badges = [];
 
           if (plugin.components.commands?.count) {
-            badges.push(`![commands](https://img.shields.io/badge/⌘_commands-${plugin.components.commands.count}-8B5CF6?style=flat-square)`);
+            badges.push(
+              `![commands](https://img.shields.io/badge/⌘_commands-${plugin.components.commands.count}-8B5CF6?style=flat-square)`,
+            );
           }
           if (plugin.components.skills?.count) {
-            badges.push(`![skills](https://img.shields.io/badge/✨_skills-${plugin.components.skills.count}-3B82F6?style=flat-square)`);
+            badges.push(
+              `![skills](https://img.shields.io/badge/✨_skills-${plugin.components.skills.count}-3B82F6?style=flat-square)`,
+            );
           }
           if (plugin.components.agents?.count) {
-            badges.push(`![agents](https://img.shields.io/badge/🤖_agents-${plugin.components.agents.count}-F97316?style=flat-square)`);
+            badges.push(
+              `![agents](https://img.shields.io/badge/🤖_agents-${plugin.components.agents.count}-F97316?style=flat-square)`,
+            );
           }
           if (plugin.components.hooks?.count) {
-            badges.push(`![hooks](https://img.shields.io/badge/🪝_hooks-${plugin.components.hooks.count}-EC4899?style=flat-square)`);
+            badges.push(
+              `![hooks](https://img.shields.io/badge/🪝_hooks-${plugin.components.hooks.count}-EC4899?style=flat-square)`,
+            );
           }
           if (plugin.components.mcp) {
-            badges.push(`![mcp](https://img.shields.io/badge/🔌_MCP-enabled-06B6D4?style=flat-square)`);
+            badges.push(
+              `![mcp](https://img.shields.io/badge/🔌_MCP-enabled-06B6D4?style=flat-square)`,
+            );
           }
 
-          return badges.length > 0 ? badges.join(' ') : '';
+          return badges.length > 0 ? badges.join(" ") : "";
         };
 
         const buildComponentsList = () => {
           const sections = [];
 
           if (plugin.components.commands?.count) {
-            const items = plugin.components.commands.names.map(name => `- \`${name}\``).join('\n');
+            const items = plugin.components.commands.names
+              .map((name) => `- \`${name}\``)
+              .join("\n");
             sections.push(`### ⌘ Commands\n\n${items}`);
           }
 
           if (plugin.components.skills?.count) {
-            const items = plugin.components.skills.names.map(name => `- \`${name}\``).join('\n');
+            const items = plugin.components.skills.names
+              .map((name) => `- \`${name}\``)
+              .join("\n");
             sections.push(`### ✨ Skills\n\n${items}`);
           }
 
           if (plugin.components.agents?.count) {
-            const items = plugin.components.agents.names.map(name => `- \`${name}\``).join('\n');
+            const items = plugin.components.agents.names
+              .map((name) => `- \`${name}\``)
+              .join("\n");
             sections.push(`### 🤖 Agents\n\n${items}`);
           }
 
           if (plugin.components.hooks?.count) {
-            const items = plugin.components.hooks.names.map(name => `- \`${name}\``).join('\n');
+            const items = plugin.components.hooks.names
+              .map((name) => `- \`${name}\``)
+              .join("\n");
             sections.push(`### 🪝 Hooks\n\n${items}`);
           }
 
           if (plugin.components.mcp) {
-            sections.push(`### 🔌 MCP Servers\n\n*Model Context Protocol integration enabled*`);
+            sections.push(
+              `### 🔌 MCP Servers\n\n*Model Context Protocol integration enabled*`,
+            );
           }
 
-          return sections.length > 0 ? sections.join('\n\n') : '';
+          return sections.length > 0 ? sections.join("\n\n") : "";
         };
 
         const buildInstallSection = () => {
           // Only show installation section if plugin is installed
           if (!plugin.installStatus?.installed) {
-            return '';
+            return "";
           }
 
-          const statusBadge = plugin.installStatus.enabled !== false
-            ? `![status](https://img.shields.io/badge/✓_enabled-22C55E?style=flat-square)`
-            : `![status](https://img.shields.io/badge/✗_disabled-EF4444?style=flat-square)`;
+          const statusBadge =
+            plugin.installStatus.enabled !== false
+              ? `![status](https://img.shields.io/badge/✓_enabled-22C55E?style=flat-square)`
+              : `![status](https://img.shields.io/badge/✗_disabled-EF4444?style=flat-square)`;
 
-          const scopeBadge = `![scope](https://img.shields.io/badge/scope-${plugin.installStatus.scope || 'unknown'}-6366F1?style=flat-square)`;
+          const scopeBadge = `![scope](https://img.shields.io/badge/scope-${plugin.installStatus.scope || "unknown"}-6366F1?style=flat-square)`;
 
           return `## 📦 Installation
 
 ${statusBadge} ${scopeBadge}
 
-**Path**: \`${plugin.installStatus.installPath || 'unknown'}\`${plugin.installStatus.version ? `\n\n**Installed Version**: \`${plugin.installStatus.version}\`` : ''}`;
+**Path**: \`${plugin.installStatus.installPath || "unknown"}\`${plugin.installStatus.version ? `\n\n**Installed Version**: \`${plugin.installStatus.version}\`` : ""}`;
         };
 
         const componentBadges = buildComponentBadges();
@@ -290,18 +375,18 @@ ${statusBadge} ${scopeBadge}
         ];
 
         if (hasComponents) {
-          sections.push('---', componentBadges, buildComponentsList());
+          sections.push("---", componentBadges, buildComponentsList());
         }
 
         if (installSection) {
-          sections.push('---', installSection);
+          sections.push("---", installSection);
         }
 
         if (plugin.repositoryUrl) {
-          sections.push('---', `[View Repository →](${plugin.repositoryUrl})`);
+          sections.push("---", `[View Repository →](${plugin.repositoryUrl})`);
         }
 
-        const markdown = sections.join('\n\n');
+        const markdown = sections.join("\n\n");
 
         return (
           <List.Item
@@ -316,17 +401,27 @@ ${statusBadge} ${scopeBadge}
                     <Action
                       title="Install (User Scope)"
                       icon={Icon.Download}
-                      onAction={() => handleInstall(plugin.name, plugin.marketplace, "user")}
+                      onAction={() =>
+                        handleInstall(plugin.name, plugin.marketplace, "user")
+                      }
                     />
                     <Action
                       title="Install (Project Scope)"
                       icon={Icon.Download}
-                      onAction={() => handleInstall(plugin.name, plugin.marketplace, "project")}
+                      onAction={() =>
+                        handleInstall(
+                          plugin.name,
+                          plugin.marketplace,
+                          "project",
+                        )
+                      }
                     />
                     <Action
                       title="Install (Local Scope)"
                       icon={Icon.Download}
-                      onAction={() => handleInstall(plugin.name, plugin.marketplace, "local")}
+                      onAction={() =>
+                        handleInstall(plugin.name, plugin.marketplace, "local")
+                      }
                     />
                   </ActionPanel.Section>
                 ) : (
@@ -334,37 +429,61 @@ ${statusBadge} ${scopeBadge}
                     <Action
                       title="Update Plugin"
                       icon={Icon.ArrowClockwise}
-                      onAction={() => handleUpdate(`${plugin.name}@${plugin.marketplace}`, plugin.installStatus!.scope!)}
+                      onAction={() =>
+                        handleUpdate(
+                          `${plugin.name}@${plugin.marketplace}`,
+                          plugin.installStatus!.scope!,
+                        )
+                      }
                     />
                     {plugin.installStatus.enabled !== false ? (
                       <Action
                         title="Disable Plugin"
                         icon={Icon.XMarkCircle}
-                        onAction={() => handleDisable(`${plugin.name}@${plugin.marketplace}`, plugin.installStatus!.scope!)}
+                        onAction={() =>
+                          handleDisable(
+                            `${plugin.name}@${plugin.marketplace}`,
+                            plugin.installStatus!.scope!,
+                          )
+                        }
                       />
                     ) : (
                       <Action
                         title="Enable Plugin"
                         icon={Icon.CheckCircle}
-                        onAction={() => handleEnable(`${plugin.name}@${plugin.marketplace}`, plugin.installStatus!.scope!)}
+                        onAction={() =>
+                          handleEnable(
+                            `${plugin.name}@${plugin.marketplace}`,
+                            plugin.installStatus!.scope!,
+                          )
+                        }
                       />
                     )}
                     <Action
                       title="Uninstall Plugin"
                       icon={Icon.Trash}
                       style={Action.Style.Destructive}
-                      onAction={() => handleUninstall(`${plugin.name}@${plugin.marketplace}`, plugin.installStatus!.scope!)}
+                      onAction={() =>
+                        handleUninstall(
+                          `${plugin.name}@${plugin.marketplace}`,
+                          plugin.installStatus!.scope!,
+                        )
+                      }
                     />
                   </ActionPanel.Section>
                 )}
                 {/* Development actions - always available if we have a path */}
-                {((plugin.installStatus?.installed && plugin.installStatus.installPath) || plugin.marketplacePath) && (
+                {((plugin.installStatus?.installed &&
+                  plugin.installStatus.installPath) ||
+                  plugin.marketplacePath) && (
                   <ActionPanel.Section title="Development">
                     <Action
                       title="Open in Finder"
                       icon={Icon.Finder}
                       onAction={() => {
-                        const pathToOpen = plugin.installStatus?.installPath || plugin.marketplacePath!;
+                        const pathToOpen =
+                          plugin.installStatus?.installPath ||
+                          plugin.marketplacePath!;
                         openInFinder(pathToOpen);
                       }}
                     />
@@ -372,7 +491,9 @@ ${statusBadge} ${scopeBadge}
                       title="Open in VS Code"
                       icon={Icon.Code}
                       onAction={() => {
-                        const pathToOpen = plugin.installStatus?.installPath || plugin.marketplacePath!;
+                        const pathToOpen =
+                          plugin.installStatus?.installPath ||
+                          plugin.marketplacePath!;
                         openInVSCode(pathToOpen);
                       }}
                     />
@@ -380,7 +501,11 @@ ${statusBadge} ${scopeBadge}
                 )}
                 {plugin.repositoryUrl && (
                   <ActionPanel.Section title="Links">
-                    <Action.OpenInBrowser title="Open Repository" icon={Icon.Globe} url={plugin.repositoryUrl} />
+                    <Action.OpenInBrowser
+                      title="Open Repository"
+                      icon={Icon.Globe}
+                      url={plugin.repositoryUrl}
+                    />
                   </ActionPanel.Section>
                 )}
                 <ActionPanel.Section title="Copy">
@@ -389,12 +514,13 @@ ${statusBadge} ${scopeBadge}
                     content={`${plugin.name}@${plugin.marketplace}`}
                     shortcut={{ modifiers: ["cmd"], key: "c" }}
                   />
-                  {plugin.installStatus?.installed && plugin.installStatus.installPath && (
-                    <Action.CopyToClipboard
-                      title="Copy Install Path"
-                      content={plugin.installStatus.installPath}
-                    />
-                  )}
+                  {plugin.installStatus?.installed &&
+                    plugin.installStatus.installPath && (
+                      <Action.CopyToClipboard
+                        title="Copy Install Path"
+                        content={plugin.installStatus.installPath}
+                      />
+                    )}
                   {plugin.marketplacePath && (
                     <Action.CopyToClipboard
                       title="Copy Marketplace Path"

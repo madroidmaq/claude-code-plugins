@@ -2,9 +2,26 @@
  * Manage Installed Plugins command
  */
 
-import { List, ActionPanel, Action, Icon, confirmAlert, Toast, showToast, Color, Alert } from "@raycast/api";
+import {
+  List,
+  ActionPanel,
+  Action,
+  Icon,
+  confirmAlert,
+  Toast,
+  showToast,
+  Color,
+  Alert,
+} from "@raycast/api";
 import { useInstalledPlugins } from "./hooks/useInstalledPlugins";
-import { uninstallPlugin, updatePlugin, enablePlugin, disablePlugin, openInFinder, openInVSCode } from "./lib/claude-cli";
+import {
+  uninstallPlugin,
+  updatePlugin,
+  enablePlugin,
+  disablePlugin,
+  openInFinder,
+  openInVSCode,
+} from "./lib/claude-cli";
 import { invalidateCache, CACHE_KEYS } from "./lib/cache-manager";
 import { ErrorView } from "./components/ErrorView";
 
@@ -15,8 +32,14 @@ export default function InstalledPlugins() {
     return <ErrorView error={error} />;
   }
 
-  async function handleUpdate(pluginId: string, scope: "user" | "project" | "local") {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Updating plugin..." });
+  async function handleUpdate(
+    pluginId: string,
+    scope: "user" | "project" | "local",
+  ) {
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Updating plugin...",
+    });
     try {
       const result = await updatePlugin(pluginId, scope);
       if (result.success) {
@@ -37,7 +60,10 @@ export default function InstalledPlugins() {
     }
   }
 
-  async function handleUninstall(pluginId: string, scope: "user" | "project" | "local") {
+  async function handleUninstall(
+    pluginId: string,
+    scope: "user" | "project" | "local",
+  ) {
     if (
       await confirmAlert({
         title: "Uninstall Plugin",
@@ -48,7 +74,10 @@ export default function InstalledPlugins() {
         },
       })
     ) {
-      const toast = await showToast({ style: Toast.Style.Animated, title: "Uninstalling plugin..." });
+      const toast = await showToast({
+        style: Toast.Style.Animated,
+        title: "Uninstalling plugin...",
+      });
       try {
         const result = await uninstallPlugin(pluginId, scope);
         if (result.success) {
@@ -70,8 +99,14 @@ export default function InstalledPlugins() {
     }
   }
 
-  async function handleEnable(pluginId: string, scope: "user" | "project" | "local") {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Enabling plugin..." });
+  async function handleEnable(
+    pluginId: string,
+    scope: "user" | "project" | "local",
+  ) {
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Enabling plugin...",
+    });
     try {
       const result = await enablePlugin(pluginId, scope);
       if (result.success) {
@@ -91,8 +126,14 @@ export default function InstalledPlugins() {
     }
   }
 
-  async function handleDisable(pluginId: string, scope: "user" | "project" | "local") {
-    const toast = await showToast({ style: Toast.Style.Animated, title: "Disabling plugin..." });
+  async function handleDisable(
+    pluginId: string,
+    scope: "user" | "project" | "local",
+  ) {
+    const toast = await showToast({
+      style: Toast.Style.Animated,
+      title: "Disabling plugin...",
+    });
     try {
       const result = await disablePlugin(pluginId, scope);
       if (result.success) {
@@ -152,26 +193,39 @@ export default function InstalledPlugins() {
                     <Action
                       title="Disable Plugin"
                       icon={Icon.XMarkCircle}
-                      onAction={() => handleDisable(plugin.pluginId, plugin.scope)}
+                      onAction={() =>
+                        handleDisable(plugin.pluginId, plugin.scope)
+                      }
                     />
                   ) : (
                     <Action
                       title="Enable Plugin"
                       icon={Icon.CheckCircle}
-                      onAction={() => handleEnable(plugin.pluginId, plugin.scope)}
+                      onAction={() =>
+                        handleEnable(plugin.pluginId, plugin.scope)
+                      }
                     />
                   )}
                   <Action
                     title="Uninstall Plugin"
                     icon={Icon.Trash}
                     style={Action.Style.Destructive}
-                    onAction={() => handleUninstall(plugin.pluginId, plugin.scope)}
-                    shortcut={{ modifiers: ["cmd"], key: "delete" }}
+                    onAction={() =>
+                      handleUninstall(plugin.pluginId, plugin.scope)
+                    }
                   />
                 </ActionPanel.Section>
                 <ActionPanel.Section title="Development">
-                  <Action title="Open in Finder" icon={Icon.Finder} onAction={() => openInFinder(plugin.installPath)} />
-                  <Action title="Open in VS Code" icon={Icon.Code} onAction={() => openInVSCode(plugin.installPath)} />
+                  <Action
+                    title="Open in Finder"
+                    icon={Icon.Finder}
+                    onAction={() => openInFinder(plugin.installPath)}
+                  />
+                  <Action
+                    title="Open in VS Code"
+                    icon={Icon.Code}
+                    onAction={() => openInVSCode(plugin.installPath)}
+                  />
                 </ActionPanel.Section>
                 <ActionPanel.Section title="Copy">
                   <Action.CopyToClipboard
@@ -179,7 +233,10 @@ export default function InstalledPlugins() {
                     content={plugin.pluginId}
                     shortcut={{ modifiers: ["cmd"], key: "c" }}
                   />
-                  <Action.CopyToClipboard title="Copy Install Path" content={plugin.installPath} />
+                  <Action.CopyToClipboard
+                    title="Copy Install Path"
+                    content={plugin.installPath}
+                  />
                 </ActionPanel.Section>
               </ActionPanel>
             }

@@ -15,6 +15,8 @@ import {
   PluginManifest,
   InstalledPluginsData,
   MarketplacesData,
+  MarketplaceManifest,
+  MarketplacePluginEntry,
   ClaudeNotInstalledError,
 } from "./types";
 
@@ -42,7 +44,10 @@ function findClaudePath(): string | null {
       if (claudePath.includes("*")) continue;
 
       // Try to execute --version to verify it works
-      execSync(`"${claudePath}" --version`, { encoding: "utf-8", stdio: "pipe" });
+      execSync(`"${claudePath}" --version`, {
+        encoding: "utf-8",
+        stdio: "pipe",
+      });
       return claudePath;
     } catch {
       // Continue to next path
@@ -52,7 +57,10 @@ function findClaudePath(): string | null {
 
   // Try using 'which' as fallback
   try {
-    const result = execSync("which claude", { encoding: "utf-8", stdio: "pipe" });
+    const result = execSync("which claude", {
+      encoding: "utf-8",
+      stdio: "pipe",
+    });
     return result.trim();
   } catch {
     return null;
@@ -148,7 +156,9 @@ export async function getMarketplaces(): Promise<Marketplace[]> {
 /**
  * Parse plugin metadata from plugin directory
  */
-async function parsePluginMetadata(pluginPath: string): Promise<Partial<Plugin> | null> {
+async function parsePluginMetadata(
+  pluginPath: string,
+): Promise<Partial<Plugin> | null> {
   try {
     // Try to read .claude-plugin/plugin.json
     const manifestPath = path.join(pluginPath, ".claude-plugin", "plugin.json");
@@ -157,7 +167,9 @@ async function parsePluginMetadata(pluginPath: string): Promise<Partial<Plugin> 
       return null;
     }
 
-    const manifest: PluginManifest = JSON.parse(fs.readFileSync(manifestPath, "utf-8"));
+    const manifest: PluginManifest = JSON.parse(
+      fs.readFileSync(manifestPath, "utf-8"),
+    );
 
     // Get components with names
     const components = {
@@ -171,7 +183,9 @@ async function parsePluginMetadata(pluginPath: string): Promise<Partial<Plugin> 
     // Extract repository URL
     let repositoryUrl: string | undefined;
     if (manifest.repository?.url) {
-      repositoryUrl = manifest.repository.url.replace(/^git\+/, "").replace(/\.git$/, "");
+      repositoryUrl = manifest.repository.url
+        .replace(/^git\+/, "")
+        .replace(/\.git$/, "");
     }
 
     return {
@@ -220,7 +234,54 @@ function getHooks(pluginPath: string): { count: number; names: string[] } {
 }
 
 /**
+ * Read marketplace manifest (marketplace.json)
+ */
+async function readMarketplaceManifest(
+  marketplacePath: string,
+): Promise<MarketplaceManifest | null> {
+  const manifestPath = path.join(
+    marketplacePath,
+    ".claude-plugin",
+    "marketplace.json",
+  );
+
+  if (!fs.existsSync(manifestPath)) {
+    return null;
+  }
+
+  try {
+    const content = fs.readFileSync(manifestPath, "utf-8");
+    return JSON.parse(content) as MarketplaceManifest;
+  } catch (error) {
+    console.error(
+      `Failed to read marketplace manifest at ${manifestPath}:`,
+      error,
+    );
+    return null;
+  }
+}
+
+/**
+ * Resolve plugin path from marketplace entry source
+ */
+function resolvePluginPath(
+  marketplacePath: string,
+  entry: MarketplacePluginEntry,
+): string | null {
+  // Handle string source (local path)
+  if (typeof entry.source === "string") {
+    const pluginPath = path.join(marketplacePath, entry.source);
+    if (fs.existsSync(pluginPath)) {
+      return pluginPath;
+    }
+  }
+  // External sources (url, github, git) don't have local paths yet
+  return null;
+}
+
+/**
  * Get all available plugins from all marketplaces
+ * Reads marketplace.json files as the single source of truth
  */
 export async function getAllAvailablePlugins(): Promise<Plugin[]> {
   const marketplaces = await getMarketplaces();
@@ -229,48 +290,69 @@ export async function getAllAvailablePlugins(): Promise<Plugin[]> {
   const allPlugins: Plugin[] = [];
 
   for (const marketplace of marketplaces) {
-    const pluginsDir = path.join(marketplace.installLocation, "plugins");
-    if (!fs.existsSync(pluginsDir)) continue;
-
     try {
-      const pluginDirs = fs.readdirSync(pluginsDir);
+      // Read marketplace.json - this is the only source of truth
+      const manifest = await readMarketplaceManifest(
+        marketplace.installLocation,
+      );
 
-      for (const pluginDir of pluginDirs) {
-        const pluginPath = path.join(pluginsDir, pluginDir);
-        if (!fs.statSync(pluginPath).isDirectory()) continue;
+      if (!manifest || !manifest.plugins) {
+        console.warn(
+          `Marketplace ${marketplace.name} has no marketplace.json file - skipping`,
+        );
+        continue;
+      }
 
-        const pluginMetadata = await parsePluginMetadata(pluginPath);
+      // Process each plugin from the manifest
+      for (const entry of manifest.plugins) {
+        const pluginId = `${entry.name}@${marketplace.name}`;
+        const installed = installedPlugins.find(
+          (p) => p.pluginId === pluginId,
+        );
 
-        if (pluginMetadata && pluginMetadata.name) {
-          // Check if installed
-          const pluginId = `${pluginDir}@${marketplace.name}`;
-          const installed = installedPlugins.find((p) => p.pluginId === pluginId);
+        // Try to resolve local plugin path for additional metadata
+        const pluginPath = resolvePluginPath(
+          marketplace.installLocation,
+          entry,
+        );
 
-          allPlugins.push({
-            name: pluginMetadata.name,
-            version: pluginMetadata.version || "unknown",
-            description: pluginMetadata.description || "",
-            author: pluginMetadata.author,
-            marketplace: marketplace.name,
-            marketplacePath: pluginPath, // Add marketplace cache path
-            components: pluginMetadata.components || {},
-            repositoryUrl: pluginMetadata.repositoryUrl,
-            installStatus: installed
-              ? {
-                  installed: true,
-                  scope: installed.scope,
-                  version: installed.version,
-                  installPath: installed.installPath,
-                  enabled: installed.enabled,
-                }
-              : {
-                  installed: false,
-                },
-          });
+        // If plugin has a local path, read detailed metadata (components, etc.)
+        let detailedMetadata: Partial<Plugin> | null = null;
+        if (pluginPath) {
+          detailedMetadata = await parsePluginMetadata(pluginPath);
         }
+
+        // Build plugin object - marketplace.json is authoritative for basic info
+        const plugin: Plugin = {
+          name: entry.name,
+          version: entry.version || detailedMetadata?.version || "unknown",
+          description:
+            entry.description || detailedMetadata?.description || "",
+          author: entry.author || detailedMetadata?.author,
+          marketplace: marketplace.name,
+          marketplacePath: pluginPath || undefined,
+          components: detailedMetadata?.components || {},
+          repositoryUrl: entry.homepage || detailedMetadata?.repositoryUrl,
+          installStatus: installed
+            ? {
+                installed: true,
+                scope: installed.scope,
+                version: installed.version,
+                installPath: installed.installPath,
+                enabled: installed.enabled,
+              }
+            : {
+                installed: false,
+              },
+        };
+
+        allPlugins.push(plugin);
       }
     } catch (error) {
-      console.error(`Failed to read plugins from marketplace ${marketplace.name}:`, error);
+      console.error(
+        `Failed to read plugins from marketplace ${marketplace.name}:`,
+        error,
+      );
     }
   }
 
@@ -282,15 +364,18 @@ export async function getAllAvailablePlugins(): Promise<Plugin[]> {
  */
 export async function installPlugin(
   pluginName: string,
-  scope: "user" | "project" | "local" = "user"
+  scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
   const claudePath = getClaudePath();
 
   try {
-    const output = execSync(`"${claudePath}" plugin install "${pluginName}" --scope ${scope}`, {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
+    const output = execSync(
+      `"${claudePath}" plugin install "${pluginName}" --scope ${scope}`,
+      {
+        encoding: "utf-8",
+        stdio: "pipe",
+      },
+    );
     return { success: true, output };
   } catch (error: any) {
     return {
@@ -306,15 +391,18 @@ export async function installPlugin(
  */
 export async function uninstallPlugin(
   pluginName: string,
-  scope: "user" | "project" | "local" = "user"
+  scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
   const claudePath = getClaudePath();
 
   try {
-    const output = execSync(`"${claudePath}" plugin uninstall "${pluginName}" --scope ${scope}`, {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
+    const output = execSync(
+      `"${claudePath}" plugin uninstall "${pluginName}" --scope ${scope}`,
+      {
+        encoding: "utf-8",
+        stdio: "pipe",
+      },
+    );
     return { success: true, output };
   } catch (error: any) {
     return {
@@ -330,15 +418,18 @@ export async function uninstallPlugin(
  */
 export async function enablePlugin(
   pluginName: string,
-  scope: "user" | "project" | "local" = "user"
+  scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
   const claudePath = getClaudePath();
 
   try {
-    const output = execSync(`"${claudePath}" plugin enable "${pluginName}" --scope ${scope}`, {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
+    const output = execSync(
+      `"${claudePath}" plugin enable "${pluginName}" --scope ${scope}`,
+      {
+        encoding: "utf-8",
+        stdio: "pipe",
+      },
+    );
     return { success: true, output };
   } catch (error: any) {
     return {
@@ -354,15 +445,18 @@ export async function enablePlugin(
  */
 export async function disablePlugin(
   pluginName: string,
-  scope: "user" | "project" | "local" = "user"
+  scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
   const claudePath = getClaudePath();
 
   try {
-    const output = execSync(`"${claudePath}" plugin disable "${pluginName}" --scope ${scope}`, {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
+    const output = execSync(
+      `"${claudePath}" plugin disable "${pluginName}" --scope ${scope}`,
+      {
+        encoding: "utf-8",
+        stdio: "pipe",
+      },
+    );
     return { success: true, output };
   } catch (error: any) {
     return {
@@ -378,15 +472,18 @@ export async function disablePlugin(
  */
 export async function updatePlugin(
   pluginName: string,
-  scope: "user" | "project" | "local" = "user"
+  scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
   const claudePath = getClaudePath();
 
   try {
-    const output = execSync(`"${claudePath}" plugin update "${pluginName}" --scope ${scope}`, {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
+    const output = execSync(
+      `"${claudePath}" plugin update "${pluginName}" --scope ${scope}`,
+      {
+        encoding: "utf-8",
+        stdio: "pipe",
+      },
+    );
     return { success: true, output };
   } catch (error: any) {
     return {
@@ -404,10 +501,13 @@ export async function addMarketplace(source: string): Promise<CLIResult> {
   const claudePath = getClaudePath();
 
   try {
-    const output = execSync(`"${claudePath}" plugin marketplace add "${source}"`, {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
+    const output = execSync(
+      `"${claudePath}" plugin marketplace add "${source}"`,
+      {
+        encoding: "utf-8",
+        stdio: "pipe",
+      },
+    );
     return { success: true, output };
   } catch (error: any) {
     return {
@@ -425,10 +525,13 @@ export async function removeMarketplace(name: string): Promise<CLIResult> {
   const claudePath = getClaudePath();
 
   try {
-    const output = execSync(`"${claudePath}" plugin marketplace remove "${name}"`, {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
+    const output = execSync(
+      `"${claudePath}" plugin marketplace remove "${name}"`,
+      {
+        encoding: "utf-8",
+        stdio: "pipe",
+      },
+    );
     return { success: true, output };
   } catch (error: any) {
     return {
