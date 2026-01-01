@@ -2,6 +2,7 @@
  * Error view component for displaying errors
  */
 
+import React from "react";
 import { Detail } from "@raycast/api";
 
 interface ErrorViewProps {

@@ -2,6 +2,7 @@
  * Manage Plugin Marketplaces command
  */
 
+import React from "react";
 import {
   List,
   ActionPanel,
@@ -173,7 +174,7 @@ export default function Marketplaces() {
         <List.Section title={`Marketplaces (${marketplaces.length})`}>
           {marketplaces.map((marketplace) => (
             <List.Item
-              key={marketplace.name}
+              id={marketplace.name}
               title={marketplace.name}
               subtitle={getSourceDescription(marketplace)}
               accessories={[

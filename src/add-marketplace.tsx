@@ -2,6 +2,7 @@
  * Add Marketplace form
  */
 
+import React, { useState } from "react";
 import {
   Form,
   ActionPanel,
@@ -10,7 +11,6 @@ import {
   Toast,
   popToRoot,
 } from "@raycast/api";
-import { useState } from "react";
 import { addMarketplace } from "./lib/claude-cli";
 import { invalidateCache, CACHE_KEYS } from "./lib/cache-manager";
 

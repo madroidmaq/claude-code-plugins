@@ -2,6 +2,7 @@
  * Browse Claude Plugins - Main command
  */
 
+import React, { useState } from "react";
 import {
   List,
   ActionPanel,
@@ -13,7 +14,6 @@ import {
   confirmAlert,
   Alert,
 } from "@raycast/api";
-import { useState } from "react";
 import { usePlugins } from "./hooks/usePlugins";
 import {
   installPlugin,
@@ -216,9 +216,8 @@ export default function BrowsePlugins() {
           value={marketplaceFilter}
           onChange={setMarketplaceFilter}
         >
-          {marketplaces.map((m) => (
+          {marketplaces.map((m: string) => (
             <List.Dropdown.Item
-              key={m}
               title={m === "all" ? "All Marketplaces" : m}
               value={m}
             />
@@ -258,13 +257,13 @@ export default function BrowsePlugins() {
 
           // Marketplace badge - using claude icon
           badges.push(
-            `![marketplace](https://img.shields.io/badge/${escapeBadgeText(plugin.marketplace)}-blue?style=flat-square&logo=claude&logoColor=white)`,
+            `![marketplace](https://img.shields.io/badge/${escapeBadgeText(plugin.marketplace)}-CC9B7A?style=flat-square&logo=claude&logoColor=white)`,
           );
 
           // Author badge with gmail icon
           if (plugin.author?.name) {
             badges.push(
-              `![author](https://img.shields.io/badge/${escapeBadgeText(plugin.author.name)}-orange?style=flat-square&logo=gmail&logoColor=white)`,
+              `![author](https://img.shields.io/badge/${escapeBadgeText(plugin.author.name)}-red?style=flat-square&logo=gmail&logoColor=white)`,
             );
           }
 
@@ -390,7 +389,7 @@ ${statusBadge} ${scopeBadge}
 
         return (
           <List.Item
-            key={`${plugin.name}@${plugin.marketplace}`}
+            id={`${plugin.name}@${plugin.marketplace}`}
             title={plugin.name}
             accessories={accessories}
             detail={<List.Item.Detail markdown={markdown} />}
@@ -399,14 +398,14 @@ ${statusBadge} ${scopeBadge}
                 {!plugin.installStatus?.installed ? (
                   <ActionPanel.Section title="Installation">
                     <Action
-                      title="Install (User Scope)"
+                      title="Install (user Scope)"
                       icon={Icon.Download}
                       onAction={() =>
                         handleInstall(plugin.name, plugin.marketplace, "user")
                       }
                     />
                     <Action
-                      title="Install (Project Scope)"
+                      title="Install (project Scope)"
                       icon={Icon.Download}
                       onAction={() =>
                         handleInstall(
@@ -417,7 +416,7 @@ ${statusBadge} ${scopeBadge}
                       }
                     />
                     <Action
-                      title="Install (Local Scope)"
+                      title="Install (local Scope)"
                       icon={Icon.Download}
                       onAction={() =>
                         handleInstall(plugin.name, plugin.marketplace, "local")
@@ -510,7 +509,7 @@ ${statusBadge} ${scopeBadge}
                 )}
                 <ActionPanel.Section title="Copy">
                   <Action.CopyToClipboard
-                    title="Copy Plugin ID"
+                    title="Copy Plugin Id"
                     content={`${plugin.name}@${plugin.marketplace}`}
                     shortcut={{ modifiers: ["cmd"], key: "c" }}
                   />
