@@ -252,6 +252,7 @@ export async function getAllAvailablePlugins(): Promise<Plugin[]> {
             description: pluginMetadata.description || "",
             author: pluginMetadata.author,
             marketplace: marketplace.name,
+            marketplacePath: pluginPath, // Add marketplace cache path
             components: pluginMetadata.components || {},
             repositoryUrl: pluginMetadata.repositoryUrl,
             installStatus: installed

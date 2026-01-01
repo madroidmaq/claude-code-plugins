@@ -4,7 +4,7 @@
 
 import { List, ActionPanel, Action, Icon, confirmAlert, showToast, Toast, Alert, Color } from "@raycast/api";
 import { useMarketplaces } from "./hooks/useMarketplaces";
-import { removeMarketplace, updateMarketplace } from "./lib/claude-cli";
+import { removeMarketplace, updateMarketplace, openInFinder, openInVSCode } from "./lib/claude-cli";
 import { invalidateCache, CACHE_KEYS } from "./lib/cache-manager";
 import AddMarketplace from "./add-marketplace";
 import { ErrorView } from "./components/ErrorView";
@@ -160,6 +160,18 @@ export default function Marketplaces() {
                       style={Action.Style.Destructive}
                       onAction={() => handleRemove(marketplace.name)}
                       shortcut={{ modifiers: ["cmd"], key: "delete" }}
+                    />
+                  </ActionPanel.Section>
+                  <ActionPanel.Section title="Development">
+                    <Action
+                      title="Open in Finder"
+                      icon={Icon.Finder}
+                      onAction={() => openInFinder(marketplace.installLocation)}
+                    />
+                    <Action
+                      title="Open in VS Code"
+                      icon={Icon.Code}
+                      onAction={() => openInVSCode(marketplace.installLocation)}
                     />
                   </ActionPanel.Section>
                   <ActionPanel.Section title="Other">

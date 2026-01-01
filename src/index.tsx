@@ -357,17 +357,24 @@ ${statusBadge} ${scopeBadge}
                     />
                   </ActionPanel.Section>
                 )}
-                {plugin.installStatus?.installed && plugin.installStatus.installPath && (
+                {/* Development actions - always available if we have a path */}
+                {((plugin.installStatus?.installed && plugin.installStatus.installPath) || plugin.marketplacePath) && (
                   <ActionPanel.Section title="Development">
                     <Action
                       title="Open in Finder"
                       icon={Icon.Finder}
-                      onAction={() => openInFinder(plugin.installStatus!.installPath!)}
+                      onAction={() => {
+                        const pathToOpen = plugin.installStatus?.installPath || plugin.marketplacePath!;
+                        openInFinder(pathToOpen);
+                      }}
                     />
                     <Action
                       title="Open in VS Code"
                       icon={Icon.Code}
-                      onAction={() => openInVSCode(plugin.installStatus!.installPath!)}
+                      onAction={() => {
+                        const pathToOpen = plugin.installStatus?.installPath || plugin.marketplacePath!;
+                        openInVSCode(pathToOpen);
+                      }}
                     />
                   </ActionPanel.Section>
                 )}
@@ -386,6 +393,12 @@ ${statusBadge} ${scopeBadge}
                     <Action.CopyToClipboard
                       title="Copy Install Path"
                       content={plugin.installStatus.installPath}
+                    />
+                  )}
+                  {plugin.marketplacePath && (
+                    <Action.CopyToClipboard
+                      title="Copy Marketplace Path"
+                      content={plugin.marketplacePath}
                     />
                   )}
                   <Action.CopyToClipboard

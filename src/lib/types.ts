@@ -11,6 +11,7 @@ export interface Plugin {
     email?: string;
   };
   marketplace: string;
+  marketplacePath?: string; // Path to plugin in marketplace cache
   components: {
     commands?: {
       count: number;
