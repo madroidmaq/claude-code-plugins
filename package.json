@@ -1,7 +1,7 @@
 {
   "$schema": "https://www.raycast.com/schemas/extension.json",
   "name": "claude-plugin-manager",
-  "title": "Claude Plugin Manager",
+  "title": "Claude Code Plugins Manager",
   "description": "Browse, install, and manage Claude Code plugins",
   "icon": "icon.png",
   "author": "madroid",
@@ -13,19 +13,19 @@
   "commands": [
     {
       "name": "index",
-      "title": "Browse Claude Plugins",
+      "title": "Browse Claude Code Plugins",
       "description": "Search and install Claude Code plugins from all marketplaces",
       "mode": "view"
     },
     {
       "name": "marketplaces",
-      "title": "Manage Plugin Marketplaces",
+      "title": "Manage Claude Code Plugin Marketplaces",
       "description": "Add, remove, and update Claude Code plugin marketplaces",
       "mode": "view"
     },
     {
       "name": "validate-plugin",
-      "title": "Validate Plugin",
+      "title": "Validate Claude Code Plugin",
       "description": "Validate a Claude Code plugin manifest (dev tool)",
       "mode": "view"
     }
