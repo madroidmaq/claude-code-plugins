@@ -561,27 +561,6 @@ export async function updateMarketplace(name?: string): Promise<CLIResult> {
 }
 
 /**
- * Validate a plugin using Claude CLI
- */
-export async function validatePlugin(pluginPath: string): Promise<CLIResult> {
-  const claudePath = getClaudePath();
-
-  try {
-    const output = execSync(`"${claudePath}" plugin validate "${pluginPath}"`, {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
-    return { success: true, output };
-  } catch (error: any) {
-    return {
-      success: false,
-      output: "",
-      error: error.stderr || error.message,
-    };
-  }
-}
-
-/**
  * Open a path in Finder (macOS)
  */
 export async function openInFinder(filePath: string): Promise<void> {

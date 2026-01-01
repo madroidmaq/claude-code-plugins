@@ -22,12 +22,6 @@
       "title": "Manage Claude Code Plugin Marketplaces",
       "description": "Add, remove, and update Claude Code plugin marketplaces",
       "mode": "view"
-    },
-    {
-      "name": "validate-plugin",
-      "title": "Validate Claude Code Plugin",
-      "description": "Validate a Claude Code plugin manifest (dev tool)",
-      "mode": "view"
     }
   ],
   "dependencies": {
