@@ -28,6 +28,11 @@ export default function BrowsePlugins() {
 
   const marketplaces = ["all", ...new Set(plugins.map((p) => p.marketplace))];
 
+  // Helper function to escape badge text for shields.io
+  const escapeBadgeText = (text: string): string => {
+    return text.replace(/-/g, '--').replace(/_/g, '__').replace(/ /g, '%20');
+  };
+
   async function handleInstall(pluginName: string, marketplace: string, scope: "user" | "project" | "local") {
     const toast = await showToast({ style: Toast.Style.Animated, title: "Installing plugin..." });
     try {
@@ -182,92 +187,128 @@ export default function BrowsePlugins() {
           }
         }
 
+        // Build GitHub-style markdown with badges
+        const buildMetadataBadges = () => {
+          const badges = [];
+
+          // Version badge - only show if version exists
+          if (plugin.version) {
+            badges.push(`![version](https://img.shields.io/badge/v${escapeBadgeText(plugin.version)}-gray?style=flat-square)`);
+          }
+
+          // Marketplace badge - using claude icon
+          badges.push(`![marketplace](https://img.shields.io/badge/${escapeBadgeText(plugin.marketplace)}-blue?style=flat-square&logo=claude&logoColor=white)`);
+
+          // Author badge with gmail icon
+          if (plugin.author?.name) {
+            badges.push(`![author](https://img.shields.io/badge/${escapeBadgeText(plugin.author.name)}-orange?style=flat-square&logo=gmail&logoColor=white)`);
+          }
+
+          return badges.join(' ');
+        };
+
+        const buildComponentBadges = () => {
+          const badges = [];
+
+          if (plugin.components.commands?.count) {
+            badges.push(`![commands](https://img.shields.io/badge/⌘_commands-${plugin.components.commands.count}-8B5CF6?style=flat-square)`);
+          }
+          if (plugin.components.skills?.count) {
+            badges.push(`![skills](https://img.shields.io/badge/✨_skills-${plugin.components.skills.count}-3B82F6?style=flat-square)`);
+          }
+          if (plugin.components.agents?.count) {
+            badges.push(`![agents](https://img.shields.io/badge/🤖_agents-${plugin.components.agents.count}-F97316?style=flat-square)`);
+          }
+          if (plugin.components.hooks?.count) {
+            badges.push(`![hooks](https://img.shields.io/badge/🪝_hooks-${plugin.components.hooks.count}-EC4899?style=flat-square)`);
+          }
+          if (plugin.components.mcp) {
+            badges.push(`![mcp](https://img.shields.io/badge/🔌_MCP-enabled-06B6D4?style=flat-square)`);
+          }
+
+          return badges.length > 0 ? badges.join(' ') : '';
+        };
+
+        const buildComponentsList = () => {
+          const sections = [];
+
+          if (plugin.components.commands?.count) {
+            const items = plugin.components.commands.names.map(name => `- \`${name}\``).join('\n');
+            sections.push(`### ⌘ Commands\n\n${items}`);
+          }
+
+          if (plugin.components.skills?.count) {
+            const items = plugin.components.skills.names.map(name => `- \`${name}\``).join('\n');
+            sections.push(`### ✨ Skills\n\n${items}`);
+          }
+
+          if (plugin.components.agents?.count) {
+            const items = plugin.components.agents.names.map(name => `- \`${name}\``).join('\n');
+            sections.push(`### 🤖 Agents\n\n${items}`);
+          }
+
+          if (plugin.components.hooks?.count) {
+            const items = plugin.components.hooks.names.map(name => `- \`${name}\``).join('\n');
+            sections.push(`### 🪝 Hooks\n\n${items}`);
+          }
+
+          if (plugin.components.mcp) {
+            sections.push(`### 🔌 MCP Servers\n\n*Model Context Protocol integration enabled*`);
+          }
+
+          return sections.length > 0 ? sections.join('\n\n') : '';
+        };
+
+        const buildInstallSection = () => {
+          // Only show installation section if plugin is installed
+          if (!plugin.installStatus?.installed) {
+            return '';
+          }
+
+          const statusBadge = plugin.installStatus.enabled !== false
+            ? `![status](https://img.shields.io/badge/✓_enabled-22C55E?style=flat-square)`
+            : `![status](https://img.shields.io/badge/✗_disabled-EF4444?style=flat-square)`;
+
+          const scopeBadge = `![scope](https://img.shields.io/badge/scope-${plugin.installStatus.scope || 'unknown'}-6366F1?style=flat-square)`;
+
+          return `## 📦 Installation
+
+${statusBadge} ${scopeBadge}
+
+**Path**: \`${plugin.installStatus.installPath || 'unknown'}\`${plugin.installStatus.version ? `\n\n**Installed Version**: \`${plugin.installStatus.version}\`` : ''}`;
+        };
+
+        const componentBadges = buildComponentBadges();
+        const hasComponents = componentBadges.length > 0;
+        const installSection = buildInstallSection();
+
+        // Build sections array for cleaner composition
+        const sections = [
+          `# ${plugin.name}`,
+          buildMetadataBadges(),
+          plugin.description,
+        ];
+
+        if (hasComponents) {
+          sections.push('---', componentBadges, buildComponentsList());
+        }
+
+        if (installSection) {
+          sections.push('---', installSection);
+        }
+
+        if (plugin.repositoryUrl) {
+          sections.push('---', `[View Repository →](${plugin.repositoryUrl})`);
+        }
+
+        const markdown = sections.join('\n\n');
+
         return (
           <List.Item
             key={`${plugin.name}@${plugin.marketplace}`}
             title={plugin.name}
             accessories={accessories}
-            detail={
-              <List.Item.Detail
-                markdown={plugin.description}
-                metadata={
-                  <List.Item.Detail.Metadata>
-                    {/* Basic Info */}
-                    <List.Item.Detail.Metadata.Label title="Version" text={plugin.version} />
-                    <List.Item.Detail.Metadata.Label title="Marketplace" text={plugin.marketplace} />
-                    <List.Item.Detail.Metadata.Label
-                      title="Author"
-                      text={`${plugin.author?.name || "Unknown"}${plugin.author?.email ? ` (${plugin.author.email})` : ""}`}
-                    />
-
-                    {/* Components */}
-                    <List.Item.Detail.Metadata.Separator />
-                    <List.Item.Detail.Metadata.Label title="Components" />
-                    {plugin.components.commands && plugin.components.commands.count > 0 && (
-                      <List.Item.Detail.Metadata.TagList title="Commands">
-                        {plugin.components.commands.names.map((name) => (
-                          <List.Item.Detail.Metadata.TagList.Item key={name} text={name} color={Color.Purple} />
-                        ))}
-                      </List.Item.Detail.Metadata.TagList>
-                    )}
-                    {plugin.components.skills && plugin.components.skills.count > 0 && (
-                      <List.Item.Detail.Metadata.TagList title="Skills">
-                        {plugin.components.skills.names.map((name) => (
-                          <List.Item.Detail.Metadata.TagList.Item key={name} text={name} color={Color.Blue} />
-                        ))}
-                      </List.Item.Detail.Metadata.TagList>
-                    )}
-                    {plugin.components.agents && plugin.components.agents.count > 0 && (
-                      <List.Item.Detail.Metadata.TagList title="Agents">
-                        {plugin.components.agents.names.map((name) => (
-                          <List.Item.Detail.Metadata.TagList.Item key={name} text={name} color={Color.Orange} />
-                        ))}
-                      </List.Item.Detail.Metadata.TagList>
-                    )}
-                    {plugin.components.hooks && plugin.components.hooks.count > 0 && (
-                      <List.Item.Detail.Metadata.TagList title="Hooks">
-                        {plugin.components.hooks.names.map((name) => (
-                          <List.Item.Detail.Metadata.TagList.Item key={name} text={name} color={Color.Magenta} />
-                        ))}
-                      </List.Item.Detail.Metadata.TagList>
-                    )}
-                    {plugin.components.mcp && (
-                      <List.Item.Detail.Metadata.Label title="MCP Servers" text="Enabled" />
-                    )}
-
-                    {/* Installation Info */}
-                    {plugin.installStatus?.installed && (
-                      <>
-                        <List.Item.Detail.Metadata.Separator />
-                        <List.Item.Detail.Metadata.Label title="Installation" />
-                        <List.Item.Detail.Metadata.TagList title="Status">
-                          <List.Item.Detail.Metadata.TagList.Item
-                            text={plugin.installStatus.enabled !== false ? "Enabled" : "Disabled"}
-                            color={plugin.installStatus.enabled !== false ? Color.Green : Color.Red}
-                          />
-                        </List.Item.Detail.Metadata.TagList>
-                        <List.Item.Detail.Metadata.Label title="Scope" text={plugin.installStatus.scope || "unknown"} />
-                        <List.Item.Detail.Metadata.Label
-                          title="Install Path"
-                          text={plugin.installStatus.installPath || "unknown"}
-                        />
-                        {plugin.installStatus.version && (
-                          <List.Item.Detail.Metadata.Label title="Installed Version" text={plugin.installStatus.version} />
-                        )}
-                      </>
-                    )}
-
-                    {/* Repository Link */}
-                    {plugin.repositoryUrl && (
-                      <>
-                        <List.Item.Detail.Metadata.Separator />
-                        <List.Item.Detail.Metadata.Link title="Repository" target={plugin.repositoryUrl} text="View on GitHub" />
-                      </>
-                    )}
-                  </List.Item.Detail.Metadata>
-                }
-              />
-            }
+            detail={<List.Item.Detail markdown={markdown} />}
             actions={
               <ActionPanel>
                 {!plugin.installStatus?.installed ? (
@@ -313,7 +354,6 @@ export default function BrowsePlugins() {
                       icon={Icon.Trash}
                       style={Action.Style.Destructive}
                       onAction={() => handleUninstall(`${plugin.name}@${plugin.marketplace}`, plugin.installStatus!.scope!)}
-                      shortcut={{ modifiers: ["cmd"], key: "delete" }}
                     />
                   </ActionPanel.Section>
                 )}
