@@ -24,6 +24,7 @@ import {
 import { invalidateCache, CACHE_KEYS } from "./lib/cache-manager";
 import AddMarketplace from "./add-marketplace";
 import { ErrorView } from "./components/ErrorView";
+import { Marketplace } from "./lib/types";
 
 export default function Marketplaces() {
   const { marketplaces, isLoading, error, refetch } = useMarketplaces();
@@ -50,10 +51,10 @@ export default function Marketplaces() {
         toast.title = "Update failed";
         toast.message = result.error;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.style = Toast.Style.Failure;
       toast.title = "Update failed";
-      toast.message = err.message;
+      toast.message = err instanceof Error ? err.message : String(err);
     }
   }
 
@@ -75,10 +76,10 @@ export default function Marketplaces() {
         toast.title = "Update failed";
         toast.message = result.error;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.style = Toast.Style.Failure;
       toast.title = "Update failed";
-      toast.message = err.message;
+      toast.message = err instanceof Error ? err.message : String(err);
     }
   }
 
@@ -110,15 +111,15 @@ export default function Marketplaces() {
           toast.title = "Remove failed";
           toast.message = result.error;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast.style = Toast.Style.Failure;
         toast.title = "Remove failed";
-        toast.message = err.message;
+        toast.message = err instanceof Error ? err.message : String(err);
       }
     }
   }
 
-  function getSourceDescription(marketplace: any): string {
+  function getSourceDescription(marketplace: Marketplace): string {
     if (marketplace.source.type === "github") {
       return `GitHub: ${marketplace.source.repo}`;
     } else if (marketplace.source.type === "directory") {

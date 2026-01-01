@@ -61,10 +61,10 @@ export default function AddMarketplace({ onAdded }: AddMarketplaceProps) {
         toast.title = "Failed to add marketplace";
         toast.message = result.error;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.style = Toast.Style.Failure;
       toast.title = "Failed to add marketplace";
-      toast.message = error.message;
+      toast.message = error instanceof Error ? error.message : String(error);
     }
   }
 

@@ -374,11 +374,11 @@ export async function installPlugin(
       },
     );
     return { success: true, output };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       output: "",
-      error: error.stderr || error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -401,11 +401,11 @@ export async function uninstallPlugin(
       },
     );
     return { success: true, output };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       output: "",
-      error: error.stderr || error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -428,11 +428,11 @@ export async function enablePlugin(
       },
     );
     return { success: true, output };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       output: "",
-      error: error.stderr || error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -455,11 +455,11 @@ export async function disablePlugin(
       },
     );
     return { success: true, output };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       output: "",
-      error: error.stderr || error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -482,11 +482,11 @@ export async function updatePlugin(
       },
     );
     return { success: true, output };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       output: "",
-      error: error.stderr || error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -506,11 +506,11 @@ export async function addMarketplace(source: string): Promise<CLIResult> {
       },
     );
     return { success: true, output };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       output: "",
-      error: error.stderr || error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -530,11 +530,11 @@ export async function removeMarketplace(name: string): Promise<CLIResult> {
       },
     );
     return { success: true, output };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       output: "",
-      error: error.stderr || error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }
@@ -551,11 +551,11 @@ export async function updateMarketplace(name?: string): Promise<CLIResult> {
       : `"${claudePath}" plugin marketplace update`;
     const output = execSync(cmd, { encoding: "utf-8", stdio: "pipe" });
     return { success: true, output };
-  } catch (error: any) {
+  } catch (error: unknown) {
     return {
       success: false,
       output: "",
-      error: error.stderr || error.message,
+      error: error instanceof Error ? error.message : String(error),
     };
   }
 }

@@ -74,10 +74,10 @@ export default function BrowsePlugins() {
         toast.title = "Installation failed";
         toast.message = result.error;
       }
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast.style = Toast.Style.Failure;
       toast.title = "Installation failed";
-      toast.message = error.message;
+      toast.message = error instanceof Error ? error.message : String(error);
     }
   }
 
@@ -102,10 +102,10 @@ export default function BrowsePlugins() {
         toast.title = "Update failed";
         toast.message = result.error;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.style = Toast.Style.Failure;
       toast.title = "Update failed";
-      toast.message = err.message;
+      toast.message = err instanceof Error ? err.message : String(err);
     }
   }
 
@@ -140,10 +140,10 @@ export default function BrowsePlugins() {
           toast.title = "Uninstall failed";
           toast.message = result.error;
         }
-      } catch (err: any) {
+      } catch (err: unknown) {
         toast.style = Toast.Style.Failure;
         toast.title = "Uninstall failed";
-        toast.message = err.message;
+        toast.message = err instanceof Error ? err.message : String(err);
       }
     }
   }
@@ -169,10 +169,10 @@ export default function BrowsePlugins() {
         toast.title = "Enable failed";
         toast.message = result.error;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.style = Toast.Style.Failure;
       toast.title = "Enable failed";
-      toast.message = err.message;
+      toast.message = err instanceof Error ? err.message : String(err);
     }
   }
 
@@ -197,10 +197,10 @@ export default function BrowsePlugins() {
         toast.title = "Disable failed";
         toast.message = result.error;
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       toast.style = Toast.Style.Failure;
       toast.title = "Disable failed";
-      toast.message = err.message;
+      toast.message = err instanceof Error ? err.message : String(err);
     }
   }
 
