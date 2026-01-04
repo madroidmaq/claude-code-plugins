@@ -63,8 +63,7 @@ export default function BrowsePlugins() {
     // For local/project scopes, show project path if available
     if (projectPath) {
       const projectName = projectPath.split("/").pop() || projectPath;
-      const scopeLabel =
-        scope.charAt(0).toUpperCase() + scope.slice(1);
+      const scopeLabel = scope.charAt(0).toUpperCase() + scope.slice(1);
       return `${scopeLabel}: ${projectName}`;
     }
 
@@ -118,7 +117,7 @@ export default function BrowsePlugins() {
 
   // Helper function to calculate relevance score for sorting
   const calculateRelevanceScore = (
-    plugin: typeof plugins[0],
+    plugin: (typeof plugins)[0],
     query: string,
   ): number => {
     if (!query) return 0;
@@ -137,7 +136,10 @@ export default function BrowsePlugins() {
     } else if (lowerName.includes(lowerQuery)) {
       score += 100; // Contains query
       // Bonus for word boundary match (e.g., "app" in "app-dev")
-      if (lowerName.includes(`${lowerQuery}-`) || lowerName.includes(`-${lowerQuery}`)) {
+      if (
+        lowerName.includes(`${lowerQuery}-`) ||
+        lowerName.includes(`-${lowerQuery}`)
+      ) {
         score += 50;
       }
     }
@@ -665,7 +667,10 @@ ${installationsList}`;
                             plugin.installations,
                           )
                         }
-                        shortcut={{ modifiers: ["cmd", "shift"], key: "delete" }}
+                        shortcut={{
+                          modifiers: ["cmd", "shift"],
+                          key: "delete",
+                        }}
                       />
                     )}
                     {/* Uninstall by Scope - sub-menu */}
@@ -703,7 +708,7 @@ ${installationsList}`;
                     </ActionPanel.Submenu>
                     {/* Enable/Disable by Scope - sub-menu */}
                     <ActionPanel.Submenu
-                      title="Enable/Disable by Scope"
+                      title="Enable/disable by Scope"
                       icon={Icon.Switch}
                       shortcut={{ modifiers: ["cmd"], key: "e" }}
                     >
