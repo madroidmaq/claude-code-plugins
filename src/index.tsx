@@ -116,14 +116,76 @@ export default function BrowsePlugins() {
     }
   };
 
-  const filteredPlugins = plugins.filter((p) => {
-    const matchesSearch =
-      p.name.toLowerCase().includes(searchText.toLowerCase()) ||
-      p.description.toLowerCase().includes(searchText.toLowerCase());
-    const matchesMarketplace =
-      marketplaceFilter === "all" || p.marketplace === marketplaceFilter;
-    return matchesSearch && matchesMarketplace;
-  });
+  // Helper function to calculate relevance score for sorting
+  const calculateRelevanceScore = (
+    plugin: typeof plugins[0],
+    query: string,
+  ): number => {
+    if (!query) return 0;
+
+    const lowerQuery = query.toLowerCase();
+    const lowerName = plugin.name.toLowerCase();
+    const lowerDesc = plugin.description.toLowerCase();
+
+    let score = 0;
+
+    // Name matching (highest priority)
+    if (lowerName === lowerQuery) {
+      score += 1000; // Exact match
+    } else if (lowerName.startsWith(lowerQuery)) {
+      score += 500; // Starts with query
+    } else if (lowerName.includes(lowerQuery)) {
+      score += 100; // Contains query
+      // Bonus for word boundary match (e.g., "app" in "app-dev")
+      if (lowerName.includes(`${lowerQuery}-`) || lowerName.includes(`-${lowerQuery}`)) {
+        score += 50;
+      }
+    }
+
+    // Description matching (lower priority)
+    if (lowerDesc.includes(lowerQuery)) {
+      score += 10;
+      // Bonus if it's a word boundary match
+      const wordBoundaryRegex = new RegExp(`\\b${lowerQuery}`, "i");
+      if (wordBoundaryRegex.test(lowerDesc)) {
+        score += 5;
+      }
+    }
+
+    // Bonus for installed plugins
+    if (plugin.installations.length > 0) {
+      score += 20;
+    }
+
+    // Bonus for enabled plugins
+    if (plugin.installations.some((i) => i.enabled !== false)) {
+      score += 10;
+    }
+
+    return score;
+  };
+
+  const filteredPlugins = plugins
+    .filter((p) => {
+      const matchesSearch =
+        p.name.toLowerCase().includes(searchText.toLowerCase()) ||
+        p.description.toLowerCase().includes(searchText.toLowerCase());
+      const matchesMarketplace =
+        marketplaceFilter === "all" || p.marketplace === marketplaceFilter;
+      return matchesSearch && matchesMarketplace;
+    })
+    .sort((a, b) => {
+      // Sort by relevance score when searching
+      if (searchText) {
+        const scoreA = calculateRelevanceScore(a, searchText);
+        const scoreB = calculateRelevanceScore(b, searchText);
+        if (scoreA !== scoreB) {
+          return scoreB - scoreA; // Higher score first
+        }
+      }
+      // Fallback to alphabetical order
+      return a.name.localeCompare(b.name);
+    });
 
   const marketplaces = ["all", ...new Set(plugins.map((p) => p.marketplace))];
 
