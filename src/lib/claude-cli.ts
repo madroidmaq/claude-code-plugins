@@ -7,6 +7,32 @@ import { execSync } from "child_process";
 import { homedir } from "os";
 import path from "path";
 import fs from "fs";
+
+/**
+ * Get the PATH environment variable with common Claude CLI installation paths
+ * This ensures Raycast can find claude command even without shell config
+ */
+function getEnhancedPath(): string {
+  const systemPaths = process.env.PATH || "";
+  const additionalPaths = [
+    path.join(homedir(), ".local", "bin"), // pipx --user install
+    "/opt/homebrew/bin", // Homebrew Apple Silicon
+    "/usr/local/bin", // Homebrew Intel
+    path.join(homedir(), ".cargo", "bin"), // Cargo installs
+  ];
+  // Remove duplicates and join
+  const uniquePaths = new Set([...systemPaths.split(":"), ...additionalPaths]);
+  return Array.from(uniquePaths).filter(Boolean).join(":");
+}
+
+/**
+ * Common exec options with enhanced PATH
+ */
+const execOptions = {
+  encoding: "utf-8" as const,
+  stdio: "pipe" as const,
+  env: { ...process.env, PATH: getEnhancedPath() },
+};
 import {
   Plugin,
   Marketplace,
@@ -17,80 +43,17 @@ import {
   MarketplacesData,
   MarketplaceManifest,
   MarketplacePluginEntry,
-  ClaudeNotInstalledError,
 } from "./types";
 
 const CLAUDE_HOME = path.join(homedir(), ".claude");
 const PLUGINS_DIR = path.join(CLAUDE_HOME, "plugins");
-
-// Common paths where Claude CLI might be installed
-const CLAUDE_PATHS = [
-  "claude", // In PATH
-  path.join(homedir(), ".local/bin/claude"), // pipx default
-  "/usr/local/bin/claude", // Homebrew
-  "/opt/homebrew/bin/claude", // Homebrew on Apple Silicon
-  path.join(homedir(), ".npm-global/bin/claude"), // npm global
-  path.join(homedir(), ".nvm/versions/node/*/bin/claude"), // nvm
-];
-
-/**
- * Find Claude CLI executable path
- */
-function findClaudePath(): string | null {
-  // Try each possible path
-  for (const claudePath of CLAUDE_PATHS) {
-    try {
-      // Skip paths with wildcards for now
-      if (claudePath.includes("*")) continue;
-
-      // Try to execute --version to verify it works
-      execSync(`"${claudePath}" --version`, {
-        encoding: "utf-8",
-        stdio: "pipe",
-      });
-      return claudePath.trim();
-    } catch {
-      // Continue to next path
-      continue;
-    }
-  }
-
-  // Try using 'which' as fallback
-  try {
-    const result = execSync("which claude", {
-      encoding: "utf-8",
-      stdio: "pipe",
-    });
-    return result.trim();
-  } catch {
-    return null;
-  }
-}
-
-// Cache the Claude path to avoid repeated lookups
-let cachedClaudePath: string | null | undefined = undefined;
-
-/**
- * Get Claude CLI path (with caching)
- */
-function getClaudePath(): string {
-  if (cachedClaudePath === undefined) {
-    cachedClaudePath = findClaudePath();
-  }
-
-  if (!cachedClaudePath) {
-    throw new ClaudeNotInstalledError();
-  }
-
-  return cachedClaudePath;
-}
 
 /**
  * Check if Claude CLI is installed
  */
 export function isClaudeInstalled(): boolean {
   try {
-    getClaudePath();
+    execSync("claude --version", execOptions);
     return true;
   } catch {
     return false;
@@ -116,7 +79,14 @@ export async function getInstalledPlugins(): Promise<InstalledPlugin[]> {
       for (const install of installations) {
         plugins.push({
           pluginId,
-          ...install,
+          scope: install.scope,
+          installPath: install.installPath,
+          version: install.version,
+          installedAt: install.installedAt,
+          lastUpdated: install.lastUpdated,
+          isLocal: install.isLocal,
+          enabled: install.enabled,
+          projectPath: install.projectPath,
         });
       }
     }
@@ -306,7 +276,17 @@ export async function getAllAvailablePlugins(): Promise<Plugin[]> {
       // Process each plugin from the manifest
       for (const entry of manifest.plugins) {
         const pluginId = `${entry.name.trim()}@${marketplace.name.trim()}`;
-        const installed = installedPlugins.find((p) => p.pluginId === pluginId);
+
+        // Find ALL installations of this plugin across different scopes
+        const installations = installedPlugins
+          .filter((p) => p.pluginId === pluginId)
+          .map((install) => ({
+            scope: install.scope,
+            version: install.version,
+            installPath: install.installPath,
+            enabled: install.enabled ?? true, // Default to true if not specified
+            projectPath: install.projectPath,
+          }));
 
         // Try to resolve local plugin path for additional metadata
         const pluginPath = resolvePluginPath(
@@ -330,17 +310,7 @@ export async function getAllAvailablePlugins(): Promise<Plugin[]> {
           marketplacePath: pluginPath || undefined,
           components: detailedMetadata?.components || {},
           repositoryUrl: entry.homepage || detailedMetadata?.repositoryUrl,
-          installStatus: installed
-            ? {
-                installed: true,
-                scope: installed.scope,
-                version: installed.version,
-                installPath: installed.installPath,
-                enabled: installed.enabled,
-              }
-            : {
-                installed: false,
-              },
+          installations, // Array of all installations (can be empty)
         };
 
         allPlugins.push(plugin);
@@ -363,15 +333,10 @@ export async function installPlugin(
   pluginName: string,
   scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
-  const claudePath = getClaudePath();
-
   try {
     const output = execSync(
-      `"${claudePath.trim()}" plugin install "${pluginName.trim()}" --scope ${scope}`,
-      {
-        encoding: "utf-8",
-        stdio: "pipe",
-      },
+      `claude plugin install "${pluginName.trim()}" --scope ${scope}`,
+      execOptions,
     );
     return { success: true, output };
   } catch (error: unknown) {
@@ -390,15 +355,10 @@ export async function uninstallPlugin(
   pluginName: string,
   scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
-  const claudePath = getClaudePath();
-
   try {
     const output = execSync(
-      `"${claudePath.trim()}" plugin uninstall "${pluginName.trim()}" --scope ${scope}`,
-      {
-        encoding: "utf-8",
-        stdio: "pipe",
-      },
+      `claude plugin uninstall "${pluginName.trim()}" --scope ${scope}`,
+      execOptions,
     );
     return { success: true, output };
   } catch (error: unknown) {
@@ -417,15 +377,10 @@ export async function enablePlugin(
   pluginName: string,
   scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
-  const claudePath = getClaudePath();
-
   try {
     const output = execSync(
-      `"${claudePath.trim()}" plugin enable "${pluginName.trim()}" --scope ${scope}`,
-      {
-        encoding: "utf-8",
-        stdio: "pipe",
-      },
+      `claude plugin enable "${pluginName.trim()}" --scope ${scope}`,
+      execOptions,
     );
     return { success: true, output };
   } catch (error: unknown) {
@@ -444,15 +399,10 @@ export async function disablePlugin(
   pluginName: string,
   scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
-  const claudePath = getClaudePath();
-
   try {
     const output = execSync(
-      `"${claudePath.trim()}" plugin disable "${pluginName.trim()}" --scope ${scope}`,
-      {
-        encoding: "utf-8",
-        stdio: "pipe",
-      },
+      `claude plugin disable "${pluginName.trim()}" --scope ${scope}`,
+      execOptions,
     );
     return { success: true, output };
   } catch (error: unknown) {
@@ -471,15 +421,10 @@ export async function updatePlugin(
   pluginName: string,
   scope: "user" | "project" | "local" = "user",
 ): Promise<CLIResult> {
-  const claudePath = getClaudePath();
-
   try {
     const output = execSync(
-      `"${claudePath.trim()}" plugin update "${pluginName.trim()}" --scope ${scope}`,
-      {
-        encoding: "utf-8",
-        stdio: "pipe",
-      },
+      `claude plugin update "${pluginName.trim()}" --scope ${scope}`,
+      execOptions,
     );
     return { success: true, output };
   } catch (error: unknown) {
@@ -495,15 +440,10 @@ export async function updatePlugin(
  * Add a marketplace using Claude CLI
  */
 export async function addMarketplace(source: string): Promise<CLIResult> {
-  const claudePath = getClaudePath();
-
   try {
     const output = execSync(
-      `"${claudePath.trim()}" plugin marketplace add "${source.trim()}"`,
-      {
-        encoding: "utf-8",
-        stdio: "pipe",
-      },
+      `claude plugin marketplace add "${source.trim()}"`,
+      execOptions,
     );
     return { success: true, output };
   } catch (error: unknown) {
@@ -519,15 +459,10 @@ export async function addMarketplace(source: string): Promise<CLIResult> {
  * Remove a marketplace using Claude CLI
  */
 export async function removeMarketplace(name: string): Promise<CLIResult> {
-  const claudePath = getClaudePath();
-
   try {
     const output = execSync(
-      `"${claudePath.trim()}" plugin marketplace remove "${name.trim()}"`,
-      {
-        encoding: "utf-8",
-        stdio: "pipe",
-      },
+      `claude plugin marketplace remove "${name.trim()}"`,
+      execOptions,
     );
     return { success: true, output };
   } catch (error: unknown) {
@@ -543,13 +478,11 @@ export async function removeMarketplace(name: string): Promise<CLIResult> {
  * Update a marketplace using Claude CLI
  */
 export async function updateMarketplace(name?: string): Promise<CLIResult> {
-  const claudePath = getClaudePath();
-
   try {
     const cmd = name
-      ? `"${claudePath.trim()}" plugin marketplace update "${name.trim()}"`
-      : `"${claudePath.trim()}" plugin marketplace update`;
-    const output = execSync(cmd, { encoding: "utf-8", stdio: "pipe" });
+      ? `claude plugin marketplace update "${name.trim()}"`
+      : `claude plugin marketplace update`;
+    const output = execSync(cmd, execOptions);
     return { success: true, output };
   } catch (error: unknown) {
     return {
