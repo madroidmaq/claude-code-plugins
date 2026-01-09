@@ -8,30 +8,82 @@ import { homedir } from "os";
 import path from "path";
 import fs from "fs";
 
+// Cached shell PATH to avoid repeated shell invocations
+let cachedShellPath: string | null = null;
+
 /**
- * Get the PATH environment variable with common Claude CLI installation paths
- * This ensures Raycast can find claude command even without shell config
+ * Get the user's full PATH from their login shell
+ * This ensures we have access to all user-configured paths (homebrew, nix, asdf, mise, volta, etc.)
  */
-function getEnhancedPath(): string {
+function getShellPath(): string {
+  if (cachedShellPath !== null) {
+    return cachedShellPath;
+  }
+
+  try {
+    // Get user's default shell and execute it as login shell to get full PATH
+    const shell = process.env.SHELL || "/bin/zsh";
+    const result = execSync(`${shell} -l -c 'echo $PATH'`, {
+      encoding: "utf-8",
+      timeout: 5000,
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+
+    if (result) {
+      cachedShellPath = result;
+      return result;
+    }
+  } catch (error) {
+    console.error("Failed to get PATH from shell:", error);
+  }
+
+  // Fallback to hardcoded paths if shell invocation fails
+  cachedShellPath = getFallbackPath();
+  return cachedShellPath;
+}
+
+/**
+ * Fallback PATH with common installation locations
+ * Used when shell PATH retrieval fails
+ */
+function getFallbackPath(): string {
   const systemPaths = process.env.PATH || "";
   const additionalPaths = [
-    path.join(homedir(), ".local", "bin"), // pipx --user install
-    "/opt/homebrew/bin", // Homebrew Apple Silicon
-    "/usr/local/bin", // Homebrew Intel
-    path.join(homedir(), ".cargo", "bin"), // Cargo installs
+    "/usr/bin",
+    "/bin",
+    "/usr/local/bin",
+    "/opt/homebrew/bin",
+    path.join(homedir(), ".local", "bin"),
+    path.join(homedir(), ".cargo", "bin"),
+    path.join(homedir(), ".npm-global", "bin"),
+    "/usr/local/git/bin",
   ];
-  // Remove duplicates and join
-  const uniquePaths = new Set([...systemPaths.split(":"), ...additionalPaths]);
+  const uniquePaths = new Set([...additionalPaths, ...systemPaths.split(":")]);
   return Array.from(uniquePaths).filter(Boolean).join(":");
 }
 
 /**
- * Common exec options with enhanced PATH
+ * Get the PATH environment variable with full user shell paths
+ * This ensures Raycast can find claude, git, and other commands
+ */
+function getEnhancedPath(): string {
+  return getShellPath();
+}
+
+/**
+ * Common exec options with enhanced PATH and Git-friendly environment
  */
 const execOptions = {
   encoding: "utf-8" as const,
   stdio: "pipe" as const,
-  env: { ...process.env, PATH: getEnhancedPath() },
+  timeout: 120000, // 120 seconds for Git operations
+  maxBuffer: 10 * 1024 * 1024, // 10MB buffer for large outputs
+  env: {
+    ...process.env,
+    PATH: getEnhancedPath(),
+    HOME: homedir(), // Ensure Git can find .gitconfig
+    GIT_TERMINAL_PROMPT: "0", // Disable Git interactive prompts
+  },
 };
 import {
   Plugin,
@@ -653,12 +705,29 @@ export async function updateMarketplace(name?: string): Promise<CLIResult> {
       ? `claude plugin marketplace update "${name.trim()}"`
       : `claude plugin marketplace update`;
     const output = execSync(cmd, execOptions);
-    return { success: true, output };
+    return { success: true, output: output.toString() };
   } catch (error: unknown) {
+    // Extract detailed error info from execSync error
+    const execError = error as {
+      message?: string;
+      stderr?: Buffer | string;
+      stdout?: Buffer | string;
+      status?: number;
+    };
+    const stderr = execError.stderr?.toString() || "";
+    const stdout = execError.stdout?.toString() || "";
+    const fullError = [
+      execError.message || String(error),
+      stderr && `stderr: ${stderr}`,
+      stdout && `stdout: ${stdout}`,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
     return {
       success: false,
-      output: "",
-      error: error instanceof Error ? error.message : String(error),
+      output: stdout,
+      error: fullError,
     };
   }
 }
