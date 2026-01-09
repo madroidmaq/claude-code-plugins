@@ -655,57 +655,72 @@ ${installationsList}`;
                         ))}
                       </ActionPanel.Submenu>
                     )}
-                    {/* Uninstall all scopes */}
-                    {plugin.installations.length > 1 && (
+                    {/* Uninstall - single scope: direct button, multiple scopes: submenu */}
+                    {plugin.installations.length === 1 ? (
                       <Action
-                        title={`Uninstall All Scopes (${plugin.installations.length})`}
+                        title="Uninstall"
                         icon={Icon.Trash}
                         style={Action.Style.Destructive}
+                        shortcut={{ modifiers: ["cmd"], key: "delete" }}
                         onAction={() =>
-                          handleUninstallAll(
+                          handleUninstall(
                             `${plugin.name}@${plugin.marketplace}`,
-                            plugin.installations,
+                            plugin.installations[0].scope,
+                            plugin.installations[0].projectPath,
                           )
                         }
-                        shortcut={{
-                          modifiers: ["cmd", "shift"],
-                          key: "delete",
-                        }}
                       />
-                    )}
-                    {/* Uninstall by Scope - sub-menu */}
-                    <ActionPanel.Submenu
-                      title="Uninstall by Scope"
-                      icon={Icon.Trash}
-                      shortcut={{ modifiers: ["cmd"], key: "delete" }}
-                    >
-                      {plugin.installations.map((install, idx) => (
-                        <React.Fragment
-                          key={getScopeKey(
-                            "uninstall",
-                            install.scope,
-                            install.projectPath,
-                            idx,
-                          )}
+                    ) : (
+                      <>
+                        <Action
+                          title={`Uninstall All Scopes (${plugin.installations.length})`}
+                          icon={Icon.Trash}
+                          style={Action.Style.Destructive}
+                          onAction={() =>
+                            handleUninstallAll(
+                              `${plugin.name}@${plugin.marketplace}`,
+                              plugin.installations,
+                            )
+                          }
+                          shortcut={{
+                            modifiers: ["cmd", "shift"],
+                            key: "delete",
+                          }}
+                        />
+                        <ActionPanel.Submenu
+                          title="Uninstall by Scope"
+                          icon={Icon.Trash}
+                          shortcut={{ modifiers: ["cmd"], key: "delete" }}
                         >
-                          <Action
-                            title={getScopeDisplayTitle(
-                              install.scope,
-                              install.projectPath,
-                            )}
-                            icon={getScopeIcon(install.scope)}
-                            style={Action.Style.Destructive}
-                            onAction={() =>
-                              handleUninstall(
-                                `${plugin.name}@${plugin.marketplace}`,
+                          {plugin.installations.map((install, idx) => (
+                            <React.Fragment
+                              key={getScopeKey(
+                                "uninstall",
                                 install.scope,
                                 install.projectPath,
-                              )
-                            }
-                          />
-                        </React.Fragment>
-                      ))}
-                    </ActionPanel.Submenu>
+                                idx,
+                              )}
+                            >
+                              <Action
+                                title={getScopeDisplayTitle(
+                                  install.scope,
+                                  install.projectPath,
+                                )}
+                                icon={getScopeIcon(install.scope)}
+                                style={Action.Style.Destructive}
+                                onAction={() =>
+                                  handleUninstall(
+                                    `${plugin.name}@${plugin.marketplace}`,
+                                    install.scope,
+                                    install.projectPath,
+                                  )
+                                }
+                              />
+                            </React.Fragment>
+                          ))}
+                        </ActionPanel.Submenu>
+                      </>
+                    )}
                     {/* Enable/Disable by Scope - sub-menu */}
                     <ActionPanel.Submenu
                       title="Enable/disable by Scope"
