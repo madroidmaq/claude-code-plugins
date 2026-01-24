@@ -7,7 +7,10 @@
 
 /* eslint-disable @typescript-eslint/ban-types */
 
-type ExtensionPreferences = {}
+type ExtensionPreferences = {
+  /** Claude CLI Path - The full path to the Claude CLI executable (e.g., /usr/local/bin/claude or ~/local/bin/claude). Leave empty to use 'claude' from system PATH. */
+  "claudePath": string
+}
 
 /** Preferences accessible in all the extension's commands */
 declare type Preferences = ExtensionPreferences
